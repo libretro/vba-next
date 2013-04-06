@@ -140,6 +140,8 @@ endif
 INCDIRS := -I$(VBA_DIR)
 LIBS :=
 
+all: $(TARGET)
+
 $(TARGET): $(OBJS)
 ifeq ($(platform), ps3)
 	$(AR) rcs $@ $(OBJS)
