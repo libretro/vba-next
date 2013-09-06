@@ -497,5 +497,5 @@ void systemDrawScreen()
 
 void systemMessage(const char* str, ...)
 {
-   fprintf(stderr, str);
+   fprintf(stderr, "%s", str);
 }
