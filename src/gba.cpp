@@ -6006,12 +6006,12 @@ union u8h
    struct
 #ifdef LSB_FIRST
    {
-      /* 0*/	unsigned lo:4;
-      /* 4*/	unsigned hi:4;
+      /* 0*/	unsigned char lo:4;
+      /* 4*/	unsigned char hi:4;
 #else
    {
-      /* 4*/	unsigned hi:4;
-      /* 0*/	unsigned lo:4;
+      /* 4*/	unsigned char hi:4;
+      /* 0*/	unsigned char lo:4;
 #endif
    }
    __pragma(pack(pop));
