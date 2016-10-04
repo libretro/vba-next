@@ -8,7 +8,7 @@ SOURCES_CXX := \
 	$(CORE_DIR)/src/system.cpp \
 	$(CORE_DIR)/libretro/libretro.cpp
 
-SOURCES_C :=
+SOURCES_C := $(LIBRETRO_COMM_DIR)/memalign.c
 
 ifeq ($(USE_THREADED_RENDERER), 1)
 ifneq ($(platform), vita)

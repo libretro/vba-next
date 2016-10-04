@@ -323,24 +323,12 @@ ifeq ($(DEBUG), 1)
 	CFLAGS += -O0 -g
 	CXXFLAGS += -O0 -g
 else
-	ifeq ($(platform), vita)
-		CFLAGS += -O1
-		CXXFLAGS += -O1
+	ifeq ($(platform), vita)		
+		CFLAGS += -O3
+		CXXFLAGS += -O3
 
-		#O2 flags.
-		__OPT_EXTRA := -fthread-jumps -falign-functions -falign-jumps -falign-loops -falign-labels -fcaller-saves -fcrossjumping 
-		__OPT_EXTRA += -fcse-follow-jumps -fcse-skip-blocks -fdelete-null-pointer-checks -fdevirtualize -fdevirtualize-speculatively 
-		__OPT_EXTRA += -fexpensive-optimizations -fgcse -fgcse-lm -fhoist-adjacent-loads -finline-small-functions -findirect-inlining 
-		__OPT_EXTRA += -fipa-cp -fipa-ra -fipa-cp-alignment -fipa-sra -fipa-icf -flra-remat -foptimize-strlen
-		__OPT_EXTRA += -fpeephole2 -freorder-functions -frerun-cse-after-loop -fsched-interblock -fsched-spec -fstrict-overflow
-		__OPT_EXTRA += -ftree-builtin-call-dce -ftree-switch-conversion -ftree-tail-merge
-		__OPT_EXTRA += -ftree-pre -fisolate-erroneous-paths-dereference
-		__OPT_EXTRA += -fschedule-insns -fschedule-insns2
-
-		#O3 flags.
-		__OPT_EXTRA += -finline-functions -funswitch-loops -fpredictive-commoning -fgcse-after-reload -ftree-loop-vectorize
-		__OPT_EXTRA += -ftree-loop-distribute-patterns -ftree-slp-vectorize -fvect-cost-model -ftree-partial-pre -fpeel-loops -fipa-cp-clone
-
+		#Currently, plain -O3 doesn't work with vita.
+		__OPT_EXTRA := -fno-optimize-sibling-calls -fno-strict-aliasing -fno-partial-inlining -fno-tree-vrp
 		CFLAGS += $(__OPT_EXTRA)
 		CXXFLAGS += $(__OPT_EXTRA)
 	else
