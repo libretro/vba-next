@@ -227,7 +227,11 @@ else ifeq ($(platform), vita)
 	CXX = arm-vita-eabi-g++$(EXE_EXT)
 	AR = arm-vita-eabi-ar$(EXE_EXT)
 	PLATFORM_DEFINES := -DBRANCHLESS_GBA_GFX -DVITA
-	__FLAGS := -marm -mtune=cortex-a9 -mcpu=cortex-a9 -mfloat-abi=hard -mword-relocations -ffast-math -fsingle-precision-constant 
+	__FLAGS := -marm -mtune=cortex-a9 -mcpu=cortex-a9 -mfloat-abi=hard -mword-relocations -ffast-math -fsingle-precision-constant
+	__FLAGS += -fno-optimize-sibling-calls -fno-strict-aliasing -fno-partial-inlining -fno-tree-vrp
+	__FLAGS += -funroll-loops -fsched2-use-superblocks
+	__FLAGS += --param allow-store-data-races=1
+
 	CFLAGS += $(__FLAGS)
 	CXXFLAGS += $(__FLAGS)
 	CXXFLAGS += -fno-exceptions -fno-rtti 
@@ -324,18 +328,8 @@ ifeq ($(DEBUG), 1)
 	CFLAGS += -O0 -g
 	CXXFLAGS += -O0 -g
 else
-	ifeq ($(platform), vita)		
-		CFLAGS += -O3
-		CXXFLAGS += -O3
-
-		#Currently, plain -O3 doesn't work with vita.
-		__OPT_EXTRA := -fno-optimize-sibling-calls -fno-strict-aliasing -fno-partial-inlining -fno-tree-vrp
-		CFLAGS += $(__OPT_EXTRA)
-		CXXFLAGS += $(__OPT_EXTRA)
-	else
-		CFLAGS += -O3
-		CXXFLAGS += -O3
-	endif
+	CFLAGS += -O3
+	CXXFLAGS += -O3
 endif
 
 include build/Makefile.common
