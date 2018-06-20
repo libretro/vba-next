@@ -2878,9 +2878,9 @@ static void armUnknownInsn(u32 opcode)
 #endif
 #ifndef OP_RSB
  #define OP_RSB \
-    u32 lhs = value;                                    \
-    u32 rhs = bus.reg[(opcode>>16)&15].I;               \
-    u32 res = lhs - rhs;                                \
+    u32 lhs = bus.reg[(opcode>>16)&15].I;                   \
+    u32 rhs = value;                                    \
+    u32 res = rhs - lhs;                                \
     bus.reg[dest].I = res;
 #endif
 #ifndef OP_RSBS
