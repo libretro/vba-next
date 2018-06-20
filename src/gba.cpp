@@ -7335,9 +7335,6 @@ u16 pa,  u16 pb, u16 pc,  u16 pd, int& currentX, int& currentY, int changed)
 
 			u32 x0 = max(  0, (int32_t)(             + (-realX + dx - 1)) / dx);
 			u32 x1 = min(240, (int32_t)((sizeX << 8) + (-realX + dx - 1)) / dx);
-			
-			if (x1 >= sizeX)
-				goto skipLine;
 
 			realX += dx * x0;
 
