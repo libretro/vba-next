@@ -2665,31 +2665,27 @@ static void armUnknownInsn(u32 opcode)
 // OP Rd,Rb,Rm LSL Rs
 #ifndef VALUE_LSL_REG_C
  #define VALUE_LSL_REG_C \
-    u32 shift = bus.reg[(opcode >> 8) & 15].B.B0;                \
-    u32 rm = bus.reg[opcode & 0x0F].I;                           \
-    if ((opcode & 0x0F) == 15) {                             \
-        rm += 4;                                             \
-    }                                                        \
-    if (shift) {                                             \
-        if (shift == 32) {                                   \
-            value = 0;                                       \
-            C_OUT = (rm & 1 ? true : false);                 \
-        } else if (shift < 32) {                     \
-            u32 v = rm;                                      \
-            C_OUT = (v >> (32 - shift)) & 1 ? true : false;  \
-            value = v << shift;                              \
-        } else {                                             \
-            value = 0;                                       \
-            C_OUT = false;                                   \
-        }                                                    \
-    } else {                                                 \
-        value = rm;                                          \
+    unsigned int shift = bus.reg[(opcode >> 8)&15].B.B0;    \
+    if (shift) {                                \
+        if (shift == 32) {                              \
+            value = 0;                                  \
+            C_OUT = (bus.reg[opcode & 0x0F].I & 1 ? true : false);\
+        } else if (shift < 32) {                \
+            u32 v = bus.reg[opcode & 0x0F].I;               \
+            C_OUT = (v >> (32 - shift)) & 1 ? true : false;\
+            value = v << shift;                         \
+        } else {                                        \
+            value = 0;                                  \
+            C_OUT = false;                              \
+        }                                               \
+    } else {                                            \
+        value = bus.reg[opcode & 0x0F].I;                   \
     }
 #endif
 // OP Rd,Rb,Rm LSR #
 #ifndef VALUE_LSR_IMM_C
  #define VALUE_LSR_IMM_C \
-    u32 shift = (opcode >> 7) & 0x1F;          \
+    unsigned int shift = (opcode >> 7) & 0x1F;          \
     if (shift) {                                \
         u32 v = bus.reg[opcode & 0x0F].I;                   \
         C_OUT = (v >> (shift - 1)) & 1 ? true : false;  \
@@ -2702,17 +2698,13 @@ static void armUnknownInsn(u32 opcode)
 // OP Rd,Rb,Rm LSR Rs
 #ifndef VALUE_LSR_REG_C
  #define VALUE_LSR_REG_C \
-    unsigned int shift = bus.reg[(opcode >> 8) & 15].B.B0;  \
-    u32 rm = bus.reg[opcode & 0x0F].I;                      \
-    if ((opcode & 0x0F) == 15) {                        \
-        rm += 4;                                        \
-    }                                                   \
+    unsigned int shift = bus.reg[(opcode >> 8)&15].B.B0;    \
     if (shift) {                                \
         if (shift == 32) {                              \
             value = 0;                                  \
-            C_OUT = (rm & 0x80000000 ? true : false);   \
+            C_OUT = (bus.reg[opcode & 0x0F].I & 0x80000000 ? true : false);\
         } else if (shift < 32) {                \
-            u32 v = rm;                                 \
+            u32 v = bus.reg[opcode & 0x0F].I;               \
             C_OUT = (v >> (shift - 1)) & 1 ? true : false;\
             value = v >> shift;                         \
         } else {                                        \
@@ -2720,14 +2712,14 @@ static void armUnknownInsn(u32 opcode)
             C_OUT = false;                              \
         }                                               \
     } else {                                            \
-        value = rm;                                     \
+        value = bus.reg[opcode & 0x0F].I;                   \
     }
 #endif
 // OP Rd,Rb,Rm ASR #
 #ifndef VALUE_ASR_IMM_C
  #define VALUE_ASR_IMM_C \
     unsigned int shift = (opcode >> 7) & 0x1F;          \
-    if (shift) {                                        \
+    if (shift) {                                \
         s32 v = bus.reg[opcode & 0x0F].I;                   \
         C_OUT = (v >> (int)(shift - 1)) & 1 ? true : false;\
         value = v >> (int)shift;                        \
@@ -2745,17 +2737,13 @@ static void armUnknownInsn(u32 opcode)
 #ifndef VALUE_ASR_REG_C
  #define VALUE_ASR_REG_C \
     unsigned int shift = bus.reg[(opcode >> 8)&15].B.B0;    \
-    u32 rm = bus.reg[opcode & 0x0F].I;                      \
-    if ((opcode & 0x0F) == 15) {                        \
-        rm += 4;                                        \
-    }                                                   \
     if (shift < 32) {                           \
         if (shift) {                            \
-            s32 v = rm;                                 \
+            s32 v = bus.reg[opcode & 0x0F].I;               \
             C_OUT = (v >> (int)(shift - 1)) & 1 ? true : false;\
             value = v >> (int)shift;                    \
         } else {                                        \
-            value = rm;                                 \
+            value = bus.reg[opcode & 0x0F].I;               \
         }                                               \
     } else {                                            \
         if (bus.reg[opcode & 0x0F].I & 0x80000000) {        \
@@ -2787,17 +2775,13 @@ static void armUnknownInsn(u32 opcode)
 #ifndef VALUE_ROR_REG_C
  #define VALUE_ROR_REG_C \
     unsigned int shift = bus.reg[(opcode >> 8)&15].B.B0;    \
-    u32 rm = bus.reg[opcode & 0x0F].I;                      \
-    if ((opcode & 0x0F) == 15) {                        \
-        rm += 4;                                        \
-    }                                                   \
     if (shift & 0x1F) {                         \
-        u32 v = rm;                                     \
+        u32 v = bus.reg[opcode & 0x0F].I;                   \
         C_OUT = (v >> (shift - 1)) & 1 ? true : false;  \
         value = ((v << (32 - shift)) |                  \
                  (v >> shift));                         \
     } else {                                            \
-        value = rm;                                     \
+        value = bus.reg[opcode & 0x0F].I;                   \
         if (shift)                                      \
             C_OUT = (value & 0x80000000 ? true : false);\
     }
@@ -2918,9 +2902,9 @@ static void armUnknownInsn(u32 opcode)
 #endif
 #ifndef OP_RSC
  #define OP_RSC \
-    u32 lhs = value;                                    \
-    u32 rhs = bus.reg[(opcode>>16)&15].I;                   \
-    u32 res = lhs - rhs - !((u32)C_FLAG);               \
+    u32 lhs = bus.reg[(opcode>>16)&15].I;                   \
+    u32 rhs = value;                                    \
+    u32 res = rhs - lhs - !((u32)C_FLAG);               \
     bus.reg[dest].I = res;
 #endif
 #ifndef OP_RSCS
@@ -3037,10 +3021,7 @@ static void armUnknownInsn(u32 opcode)
 			bus.reg[15].I += 2;                                     \
 			THUMB_PREFETCH;                                     \
 		}                                                       \
-		clockTicks = 3 + ISREGSHIFT                             \
-			+ codeTicksAccess(bus.armNextPC,BITS_32)           \
-			+ codeTicksAccessSeq32(bus.armNextPC)        \
-                       	+ codeTicksAccessSeq32(bus.armNextPC);       \
+		clockTicks = CLOCKTICKS_UPDATE_TYPE32P + ISREGSHIFT; \
 	}
 
 #define MODECHANGE_NO  /*nothing*/
@@ -3153,9 +3134,7 @@ DEFINE_ALU_INSN_C (1F, 3F, MVNS, YES)
     SETCOND;                                            \
     if ((s32)rs < 0)                                    \
         rs = ~rs;                                       \
-    if ((rs & 0xFFFFFF00) == 0)                         \
-        clockTicks += 0;                                \
-    else if ((rs & 0xFFFF0000) == 0)                    \
+    if ((rs & 0xFFFF0000) == 0)                         \
         clockTicks += 1;                                \
     else if ((rs & 0xFF000000) == 0)                    \
         clockTicks += 2;                                \
@@ -4563,9 +4542,7 @@ typedef  void (*insnfunc_t)(u32 opcode);
     REP16(insn),REP16(insn),REP16(insn),REP16(insn)
 #define arm_UI armUnknownInsn
 #define arm_BP armUnknownInsn
-
-static insnfunc_t armInsnTable[4096] =
-{
+static insnfunc_t armInsnTable[4096] = {
     arm000,arm001,arm002,arm003,arm004,arm005,arm006,arm007,  // 000
     arm000,arm009,arm002,arm00B,arm004,arm_UI,arm006,arm_UI,  // 008
     arm010,arm011,arm012,arm013,arm014,arm015,arm016,arm017,  // 010
@@ -4595,9 +4572,9 @@ static insnfunc_t armInsnTable[4096] =
     arm0D0,arm0D1,arm0D2,arm0D3,arm0D4,arm0D5,arm0D6,arm0D7,  // 0D0
     arm0D0,arm0D9,arm0D2,arm0DB,arm0D4,arm0DD,arm0D6,arm0DF,  // 0D8
     arm0E0,arm0E1,arm0E2,arm0E3,arm0E4,arm0E5,arm0E6,arm0E7,  // 0E0
-    arm0E0,arm0E9,arm0E2,arm0CB,arm0E4,arm_UI,arm0E6,arm_UI,  // 0E8
+    arm0E0,arm0E9,arm0E2,arm_UI,arm0E4,arm_UI,arm0E6,arm_UI,  // 0E8
     arm0F0,arm0F1,arm0F2,arm0F3,arm0F4,arm0F5,arm0F6,arm0F7,  // 0F0
-    arm0F0,arm0F9,arm0F2,arm0DB,arm0F4,arm0DD,arm0F6,arm0DF,  // 0F8
+    arm0F0,arm0F9,arm0F2,arm_UI,arm0F4,arm0DD,arm0F6,arm0DF,  // 0F8
 
     arm100,arm_UI,arm_UI,arm_UI,arm_UI,arm_UI,arm_UI,arm_UI,  // 100
     arm_UI,arm109,arm_UI,arm10B,arm_UI,arm_UI,arm_UI,arm_UI,  // 108
@@ -5617,19 +5594,10 @@ static  void thumb45_3(u32 opcode)
   CMP_RD_RS;
 }
 
-// MOV Rd, Rs
-static  void thumb46_0(u32 opcode)
-{
-  bus.reg[opcode&7].I = bus.reg[((opcode>>3)&7)].I;
-  clockTicks = CLOCKTICKS_UPDATE_TYPE16;
-}
-
-
 // MOV Rd, Hs
 static  void thumb46_1(u32 opcode)
 {
   bus.reg[opcode&7].I = bus.reg[((opcode>>3)&7)+8].I;
-  clockTicks = CLOCKTICKS_UPDATE_TYPE16;
 }
 
 // MOV Hd, Rs
@@ -5679,7 +5647,7 @@ static  void thumb47(u32 opcode)
 		bus.armNextPC = bus.reg[15].I;
 		bus.reg[15].I += 4;
 		ARM_PREFETCH;		
-		clockTicks = CLOCKTICKS_UPDATE_TYPE32P ;
+      clockTicks = CLOCKTICKS_UPDATE_TYPE32P ;
 	}
 }
 
@@ -5900,7 +5868,6 @@ static  void thumbA0(u32 opcode)
 {
   u8 regist = (opcode >> 8) & 7;
   bus.reg[regist].I = (bus.reg[15].I & 0xFFFFFFFC) + ((opcode&255)<<2);
-  clockTicks = CLOCKTICKS_UPDATE_TYPE16;
 }
 
 // ADD R0~R7, SP, Imm
@@ -5908,7 +5875,6 @@ static  void thumbA8(u32 opcode)
 {
   u8 regist = (opcode >> 8) & 7;
   bus.reg[regist].I = bus.reg[13].I + ((opcode&255)<<2);
-  clockTicks = CLOCKTICKS_UPDATE_TYPE16;
 }
 
 // ADD SP, Imm
@@ -5918,7 +5884,6 @@ static  void thumbB0(u32 opcode)
   if(opcode & 0x80)
     offset = -offset;
   bus.reg[13].I += offset;
-  clockTicks = CLOCKTICKS_UPDATE_TYPE16;
 }
 
 // Push and pop ///////////////////////////////////////////////////////////
@@ -6105,9 +6070,6 @@ static  void thumbC8(u32 opcode)
 // BEQ offset
 static  void thumbD0(u32 opcode)
 {
-#if !USE_TWEAK_SPEEDHACK
-	clockTicks = CLOCKTICKS_UPDATE_TYPE16;
-#endif
 	if(Z_FLAG)
 	{
 		bus.reg[15].I += ((s8)(opcode & 0xFF)) << 1;
@@ -6117,8 +6079,7 @@ static  void thumbD0(u32 opcode)
 #if USE_TWEAK_SPEEDHACK
 		clockTicks = 30;
 #else
-		clockTicks += codeTicksAccessSeq16(bus.armNextPC)
-			+ codeTicksAccess(bus.armNextPC, BITS_16) + 2;
+		clockTicks = CLOCKTICKS_UPDATE_TYPE16P;
 #endif		
 		bus.busPrefetchCount=0;
 	}
@@ -6127,14 +6088,12 @@ static  void thumbD0(u32 opcode)
 // BNE offset
 static  void thumbD1(u32 opcode)
 {
-  clockTicks = CLOCKTICKS_UPDATE_TYPE16;
   if(!Z_FLAG) {
     bus.reg[15].I += ((s8)(opcode & 0xFF)) << 1;
     bus.armNextPC = bus.reg[15].I;
     bus.reg[15].I += 2;
     THUMB_PREFETCH;
-    clockTicks += codeTicksAccessSeq16(bus.armNextPC)
-        + codeTicksAccess(bus.armNextPC, BITS_16) + 2;
+	clockTicks = CLOCKTICKS_UPDATE_TYPE16P;
     bus.busPrefetchCount=0;
   }
 }
@@ -6142,14 +6101,12 @@ static  void thumbD1(u32 opcode)
 // BCS offset
 static  void thumbD2(u32 opcode)
 {
-  clockTicks = CLOCKTICKS_UPDATE_TYPE16;
   if(C_FLAG) {
     bus.reg[15].I += ((s8)(opcode & 0xFF)) << 1;
     bus.armNextPC = bus.reg[15].I;
     bus.reg[15].I += 2;
     THUMB_PREFETCH;
-    clockTicks += codeTicksAccessSeq16(bus.armNextPC)
-        + codeTicksAccess(bus.armNextPC, BITS_16) + 2;
+	clockTicks = CLOCKTICKS_UPDATE_TYPE16P;
     bus.busPrefetchCount=0;
   }
 }
@@ -6157,14 +6114,12 @@ static  void thumbD2(u32 opcode)
 // BCC offset
 static  void thumbD3(u32 opcode)
 {
-  clockTicks = CLOCKTICKS_UPDATE_TYPE16;
   if(!C_FLAG) {
     bus.reg[15].I += ((s8)(opcode & 0xFF)) << 1;
     bus.armNextPC = bus.reg[15].I;
     bus.reg[15].I += 2;
     THUMB_PREFETCH;
-    clockTicks += codeTicksAccessSeq16(bus.armNextPC)
-        + codeTicksAccess(bus.armNextPC, BITS_16) + 2;
+	clockTicks = CLOCKTICKS_UPDATE_TYPE16P;
     bus.busPrefetchCount=0;
   }
 }
@@ -6172,14 +6127,12 @@ static  void thumbD3(u32 opcode)
 // BMI offset
 static  void thumbD4(u32 opcode)
 {
-  clockTicks = CLOCKTICKS_UPDATE_TYPE16;
   if(N_FLAG) {
     bus.reg[15].I += ((s8)(opcode & 0xFF)) << 1;
     bus.armNextPC = bus.reg[15].I;
     bus.reg[15].I += 2;
     THUMB_PREFETCH;
-    clockTicks += codeTicksAccessSeq16(bus.armNextPC)
-        + codeTicksAccess(bus.armNextPC, BITS_16) + 2;
+	clockTicks = CLOCKTICKS_UPDATE_TYPE16P;
     bus.busPrefetchCount=0;
   }
 }
@@ -6187,14 +6140,12 @@ static  void thumbD4(u32 opcode)
 // BPL offset
 static  void thumbD5(u32 opcode)
 {
-  clockTicks = CLOCKTICKS_UPDATE_TYPE16;
   if(!N_FLAG) {
     bus.reg[15].I += ((s8)(opcode & 0xFF)) << 1;
     bus.armNextPC = bus.reg[15].I;
     bus.reg[15].I += 2;
     THUMB_PREFETCH;
-    clockTicks += codeTicksAccessSeq16(bus.armNextPC)
-        + codeTicksAccess(bus.armNextPC, BITS_16) + 2;
+	clockTicks = CLOCKTICKS_UPDATE_TYPE16P;
     bus.busPrefetchCount=0;
   }
 }
@@ -6202,14 +6153,12 @@ static  void thumbD5(u32 opcode)
 // BVS offset
 static  void thumbD6(u32 opcode)
 {
-  clockTicks = CLOCKTICKS_UPDATE_TYPE16;
   if(V_FLAG) {
     bus.reg[15].I += ((s8)(opcode & 0xFF)) << 1;
     bus.armNextPC = bus.reg[15].I;
     bus.reg[15].I += 2;
     THUMB_PREFETCH;
-    clockTicks += codeTicksAccessSeq16(bus.armNextPC)
-        + codeTicksAccess(bus.armNextPC, BITS_16) + 2;
+	clockTicks = CLOCKTICKS_UPDATE_TYPE16P;
     bus.busPrefetchCount=0;
   }
 }
@@ -6217,14 +6166,12 @@ static  void thumbD6(u32 opcode)
 // BVC offset
 static  void thumbD7(u32 opcode)
 {
-  clockTicks = CLOCKTICKS_UPDATE_TYPE16;
   if(!V_FLAG) {
     bus.reg[15].I += ((s8)(opcode & 0xFF)) << 1;
     bus.armNextPC = bus.reg[15].I;
     bus.reg[15].I += 2;
     THUMB_PREFETCH;
-    clockTicks += codeTicksAccessSeq16(bus.armNextPC)
-        + codeTicksAccess(bus.armNextPC, BITS_16) + 2;
+	clockTicks = CLOCKTICKS_UPDATE_TYPE16P;
     bus.busPrefetchCount=0;
   }
 }
@@ -6232,14 +6179,12 @@ static  void thumbD7(u32 opcode)
 // BHI offset
 static  void thumbD8(u32 opcode)
 {
-  clockTicks = CLOCKTICKS_UPDATE_TYPE16;
   if(C_FLAG && !Z_FLAG) {
     bus.reg[15].I += ((s8)(opcode & 0xFF)) << 1;
     bus.armNextPC = bus.reg[15].I;
     bus.reg[15].I += 2;
     THUMB_PREFETCH;
-    clockTicks += codeTicksAccessSeq16(bus.armNextPC)
-        + codeTicksAccess(bus.armNextPC, BITS_16) + 2;
+	clockTicks = CLOCKTICKS_UPDATE_TYPE16P;
     bus.busPrefetchCount=0;
   }
 }
@@ -6247,14 +6192,12 @@ static  void thumbD8(u32 opcode)
 // BLS offset
 static  void thumbD9(u32 opcode)
 {
-  clockTicks = CLOCKTICKS_UPDATE_TYPE16;
   if(!C_FLAG || Z_FLAG) {
     bus.reg[15].I += ((s8)(opcode & 0xFF)) << 1;
     bus.armNextPC = bus.reg[15].I;
     bus.reg[15].I += 2;
     THUMB_PREFETCH;
-    clockTicks += codeTicksAccessSeq16(bus.armNextPC)
-        + codeTicksAccess(bus.armNextPC, BITS_16) + 2;
+	clockTicks = CLOCKTICKS_UPDATE_TYPE16P;
     bus.busPrefetchCount=0;
   }
 }
@@ -6262,14 +6205,12 @@ static  void thumbD9(u32 opcode)
 // BGE offset
 static  void thumbDA(u32 opcode)
 {
-  clockTicks = CLOCKTICKS_UPDATE_TYPE16;
   if(N_FLAG == V_FLAG) {
     bus.reg[15].I += ((s8)(opcode & 0xFF)) << 1;
     bus.armNextPC = bus.reg[15].I;
     bus.reg[15].I += 2;
     THUMB_PREFETCH;
-    clockTicks += codeTicksAccessSeq16(bus.armNextPC)
-        + codeTicksAccess(bus.armNextPC, BITS_16) + 2;
+	clockTicks = CLOCKTICKS_UPDATE_TYPE16P;
     bus.busPrefetchCount=0;
   }
 }
@@ -6277,14 +6218,12 @@ static  void thumbDA(u32 opcode)
 // BLT offset
 static  void thumbDB(u32 opcode)
 {
-  clockTicks = CLOCKTICKS_UPDATE_TYPE16;
   if(N_FLAG != V_FLAG) {
     bus.reg[15].I += ((s8)(opcode & 0xFF)) << 1;
     bus.armNextPC = bus.reg[15].I;
     bus.reg[15].I += 2;
     THUMB_PREFETCH;
-    clockTicks += codeTicksAccessSeq16(bus.armNextPC)
-        + codeTicksAccess(bus.armNextPC, BITS_16) + 2;
+	clockTicks = CLOCKTICKS_UPDATE_TYPE16P;
     bus.busPrefetchCount=0;
   }
 }
@@ -6292,14 +6231,12 @@ static  void thumbDB(u32 opcode)
 // BGT offset
 static  void thumbDC(u32 opcode)
 {
-  clockTicks = CLOCKTICKS_UPDATE_TYPE16;
   if(!Z_FLAG && (N_FLAG == V_FLAG)) {
     bus.reg[15].I += ((s8)(opcode & 0xFF)) << 1;
     bus.armNextPC = bus.reg[15].I;
     bus.reg[15].I += 2;
     THUMB_PREFETCH;
-    clockTicks += codeTicksAccessSeq16(bus.armNextPC)
-        + codeTicksAccess(bus.armNextPC, BITS_16) + 2;
+	clockTicks = CLOCKTICKS_UPDATE_TYPE16P;
     bus.busPrefetchCount=0;
   }
 }
@@ -6307,14 +6244,12 @@ static  void thumbDC(u32 opcode)
 // BLE offset
 static  void thumbDD(u32 opcode)
 {
-  clockTicks = CLOCKTICKS_UPDATE_TYPE16;
   if(Z_FLAG || (N_FLAG != V_FLAG)) {
     bus.reg[15].I += ((s8)(opcode & 0xFF)) << 1;
     bus.armNextPC = bus.reg[15].I;
     bus.reg[15].I += 2;
     THUMB_PREFETCH;
-    clockTicks += codeTicksAccessSeq16(bus.armNextPC)
-        + codeTicksAccess(bus.armNextPC, BITS_16) + 2;
+	clockTicks = CLOCKTICKS_UPDATE_TYPE16P;
     bus.busPrefetchCount=0;
   }
 }
@@ -6324,7 +6259,7 @@ static  void thumbDD(u32 opcode)
 // SWI #comment
 static  void thumbDF(u32 opcode)
 {
-  clockTicks = 3;
+  clockTicks = (codeTicksAccessSeq16(0) << 1) + codeTicksAccess(0, BITS_16) + 3;
   bus.busPrefetchCount=0;
   CPUSoftwareInterrupt(opcode & 0xFF);
 }
@@ -6378,9 +6313,7 @@ static  void thumbF8(u32 opcode)
 typedef  void (*insnfunc_t)(u32 opcode);
 #define thumbUI thumbUnknownInsn
 #define thumbBP thumbUnknownInsn
-
-static insnfunc_t thumbInsnTable[1024] =
-{
+static insnfunc_t thumbInsnTable[1024] = {
   thumb00_00,thumb00_01,thumb00_02,thumb00_03,thumb00_04,thumb00_05,thumb00_06,thumb00_07,  // 00
   thumb00_08,thumb00_09,thumb00_0A,thumb00_0B,thumb00_0C,thumb00_0D,thumb00_0E,thumb00_0F,
   thumb00_10,thumb00_11,thumb00_12,thumb00_13,thumb00_14,thumb00_15,thumb00_16,thumb00_17,
@@ -6416,7 +6349,7 @@ static insnfunc_t thumbInsnTable[1024] =
   thumb40_0,thumb40_1,thumb40_2,thumb40_3,thumb41_0,thumb41_1,thumb41_2,thumb41_3,  // 40
   thumb42_0,thumb42_1,thumb42_2,thumb42_3,thumb43_0,thumb43_1,thumb43_2,thumb43_3,
   thumbUI,thumb44_1,thumb44_2,thumb44_3,thumbUI,thumb45_1,thumb45_2,thumb45_3,
-  thumb46_0,thumb46_1,thumb46_2,thumb46_3,thumb47,thumb47,thumbUI,thumbUI,
+  thumbUI,thumb46_1,thumb46_2,thumb46_3,thumb47,thumb47,thumbUI,thumbUI,
   thumb48,thumb48,thumb48,thumb48,thumb48,thumb48,thumb48,thumb48,  // 48
   thumb48,thumb48,thumb48,thumb48,thumb48,thumb48,thumb48,thumb48,
   thumb48,thumb48,thumb48,thumb48,thumb48,thumb48,thumb48,thumb48,
