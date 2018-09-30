@@ -580,8 +580,14 @@ void retro_cheat_reset(void)
    cheatsDeleteAll(false);
 }
 
+#define ISHEXDEC \
+   ((codeLine[cursor] >= '0') && (codeLine[cursor] <= '9')) || \
+   ((codeLine[cursor] >= 'a') && (codeLine[cursor] <= 'f')) || \
+   ((codeLine[cursor] >= 'A') && (codeLine[cursor] <= 'F')) \
+
 void retro_cheat_set(unsigned index, bool enabled, const char *code)
 {
+   char name[128];
    /*const char *begin, *c;
 
    begin = c = code;
@@ -621,16 +627,12 @@ void retro_cheat_set(unsigned index, bool enabled, const char *code)
 
    } while (*c++);*/
 
-   #define ISHEXDEC \
-      ((codeLine[cursor] >= '0') && (codeLine[cursor] <= '9')) || \
-      ((codeLine[cursor] >= 'a') && (codeLine[cursor] <= 'f')) || \
-      ((codeLine[cursor] >= 'A') && (codeLine[cursor] <= 'F')) \
-
    std::string codeLine = code;
-   std::string name = "cheat_" + index;
    int matchLength = 0;
    std::vector<std::string> codeParts;
-   int cursor;
+   unsigned cursor;
+
+   snprintf(name, sizeof(name), "cheat_%d", index);
 
    //Break the code into Parts
    for (cursor=0;;cursor++)
@@ -657,7 +659,7 @@ void retro_cheat_set(unsigned index, bool enabled, const char *code)
    }
 
    //Add to core
-   for (cursor = 0; cursor<codeParts.size(); cursor += 2)
+   for (cursor = 0; cursor < codeParts.size(); cursor += 2)
    {
       std::string codeString;
       codeString += codeParts[cursor];
@@ -665,13 +667,13 @@ void retro_cheat_set(unsigned index, bool enabled, const char *code)
       if (codeParts[cursor + 1].length() == 8)
       {
          codeString += codeParts[cursor + 1];
-         cheatsAddGSACode(codeString.c_str(), name.c_str(), true);
+         cheatsAddGSACode(codeString.c_str(), name, true);
       }
       else if (codeParts[cursor + 1].length() == 4)
       {
          codeString += " ";
          codeString += codeParts[cursor + 1];
-         cheatsAddCBACode(codeString.c_str(), name.c_str());
+         cheatsAddCBACode(codeString.c_str(), name);
       }
       else
       {
