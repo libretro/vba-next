@@ -632,7 +632,7 @@ void retro_cheat_set(unsigned index, bool enabled, const char *code)
    std::vector<std::string> codeParts;
    unsigned cursor;
 
-   snprintf(name, sizeof(name), "cheat_%d", index);
+   sprintf(name, "cheat_%d", index);
 
    //Break the code into Parts
    for (cursor=0;;cursor++)
