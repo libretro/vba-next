@@ -581,56 +581,20 @@ void retro_cheat_reset(void)
 }
 
 #define ISHEXDEC \
-   ((codeLine[cursor] >= '0') && (codeLine[cursor] <= '9')) || \
-   ((codeLine[cursor] >= 'a') && (codeLine[cursor] <= 'f')) || \
-   ((codeLine[cursor] >= 'A') && (codeLine[cursor] <= 'F')) \
+   ((code[cursor] >= '0') && (code[cursor] <= '9')) || \
+   ((code[cursor] >= 'a') && (code[cursor] <= 'f')) || \
+   ((code[cursor] >= 'A') && (code[cursor] <= 'F')) \
 
 void retro_cheat_set(unsigned index, bool enabled, const char *code)
 {
    char name[128];
-   /*const char *begin, *c;
-
-   begin = c = code;
-
-   if (!code)
-      return;
-
-   do {
-      if (*c != '+' && *c != '\0')
-         continue;
-
-      char buf[32] = {0};
-      int len = c - begin;
-      int i;
-
-      // make sure it's using uppercase letters
-      for (i = 0; i < len; i++)
-         buf[i] = toupper(begin[i]);
-      buf[i] = 0;
-
-      begin = ++c;
-
-      if (len == 16)
-         cheatsAddGSACode(buf, "", false);
-      else {
-         char *space = strrchr(buf, ' ');
-         if (space != NULL) {
-            if ((buf + len - space - 1) == 4)
-               cheatsAddCBACode(buf, "");
-            else {
-               memmove(space, space+1, strlen(space+1)+1);
-               cheatsAddGSACode(buf, "", true);
-            }
-         } else if (log_cb)
-            log_cb(RETRO_LOG_ERROR, "[VBA] Invalid cheat code '%s'\n", buf);
-      }
-
-   } while (*c++);*/
-
-   std::string codeLine = code;
-   int matchLength = 0;
-   std::vector<std::string> codeParts;
    unsigned cursor;
+   char *codeLine = NULL ;
+   int codeLineSize = strlen(code)+5 ;
+   int codePos = 0 ;
+   int i ;
+
+   codeLine = (char*)calloc(codeLineSize,sizeof(char)) ;
 
    sprintf(name, "cheat_%d", index);
 
@@ -638,51 +602,39 @@ void retro_cheat_set(unsigned index, bool enabled, const char *code)
    for (cursor=0;;cursor++)
    {
       if (ISHEXDEC)
-         matchLength++;
+         codeLine[codePos++] = toupper(code[cursor]) ;
       else
       {
-         if (matchLength)
+         if ( codePos >= 12 )
          {
-            if (matchLength > 8)
+            if ( codePos == 12 )
             {
-               codeParts.push_back(codeLine.substr(cursor - matchLength, 8));
-               codeParts.push_back(codeLine.substr(cursor - matchLength + 8, matchLength - 8));
+               for ( i = 0 ; i < 4 ; i++ )
+                  codeLine[codePos-i] = codeLine[(codePos-i)-1] ;
+               codeLine[8] = ' ' ;
+               codeLine[13] = '\0' ;
+               cheatsAddCBACode(codeLine, name);
+               log_cb(RETRO_LOG_INFO, "Cheat code added: '%s'\n", codeLine);
+            } else if ( codePos == 16 )
+            {
+               codeLine[16] = '\0' ;
+               cheatsAddGSACode(codeLine, name, true);
+               log_cb(RETRO_LOG_INFO, "Cheat code added: '%s'\n", codeLine);
+            } else 
+            {
+               codeLine[codePos] = '\0' ;
+               log_cb(RETRO_LOG_ERROR, "Invalid cheat code '%s'\n", codeLine);
             }
-            else
-               codeParts.push_back(codeLine.substr(cursor - matchLength, matchLength));
-
-            matchLength = 0;
+            codePos = 0 ;
+            memset(codeLine,0,codeLineSize) ;
          }
       }
-      if (!codeLine[cursor])
+      if (!code[cursor])
          break;
    }
 
-   //Add to core
-   for (cursor = 0; cursor < codeParts.size(); cursor += 2)
-   {
-      std::string codeString;
-      codeString += codeParts[cursor];
 
-      if (codeParts[cursor + 1].length() == 8)
-      {
-         codeString += codeParts[cursor + 1];
-         cheatsAddGSACode(codeString.c_str(), name, true);
-      }
-      else if (codeParts[cursor + 1].length() == 4)
-      {
-         codeString += " ";
-         codeString += codeParts[cursor + 1];
-         cheatsAddCBACode(codeString.c_str(), name);
-      }
-      else
-      {
-         codeString += " ";
-         codeString += codeParts[cursor + 1];
-         log_cb(RETRO_LOG_ERROR, "Invalid cheat code '%s'\n", codeString.c_str());
-      }
-      log_cb(RETRO_LOG_INFO, "Cheat code added: '%s'\n", codeString.c_str());
-   }
+   free(codeLine) ;
 }
 
 bool retro_load_game(const struct retro_game_info *game)
