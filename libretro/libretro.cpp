@@ -155,7 +155,11 @@ void retro_set_environment(retro_environment_t cb)
 
 void retro_get_system_info(struct retro_system_info *info)
 {
+#ifdef GEKKO
+   info->need_fullpath = true;
+#else   
    info->need_fullpath = false;
+#endif
    info->valid_extensions = "gba";
 #ifndef GIT_VERSION
 #define GIT_VERSION ""
@@ -658,7 +662,11 @@ bool retro_load_game(const struct retro_game_info *game)
 
    environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, desc);
 
+#ifdef GEKKO
+	bool ret = CPULoadRom(game->path);
+#else
    bool ret = CPULoadRomData((const char*)game->data, game->size);
+#endif
 
    gba_init();
 
