@@ -9202,6 +9202,10 @@ int CPULoadRom(const char * file)
 		}
 	}
 
+	//load cartridge code
+	memcpy(cartridgeCode, whereToLoad + 0xAC, 4);
+	applyCartridgeOverride(cartridgeCode);
+
 	uint16_t *temp = (uint16_t *)(rom+((romSize+1)&~1));
 	int i;
 
