@@ -1,0 +1,163 @@
+##############
+# Works on hosts Windows (x64)
+# Download Visual Studio 2010
+
+##########################
+# Checks the host platform
+
+HOST_PLATFORM = linux
+ifeq ($(shell uname -a),)
+  HOST_PLATFORM = windows
+else ifneq ($(findstring MINGW,$(shell uname -a)),)
+  HOST_PLATFORM = windows
+else ifneq ($(findstring Darwin,$(shell uname -a)),)
+  HOST_PLATFORM = darwin
+else ifneq ($(findstring win,$(shell uname -a)),)
+  HOST_PLATFORM = windows
+endif
+
+####################################
+# Core-specific switches
+
+FRONTEND_SUPPORTS_RGB565=1
+
+####################################
+# Variable setup for Makefile.common
+
+CORE_DIR  ?= ..
+BUILD_DIR ?= .
+INCLUDES   = 
+
+include $(BUILD_DIR)/Makefile.common
+
+#################
+# Toolchain setup
+
+TargetArchMoniker = x86
+
+CC  = cl.exe
+CXX = cl.exe
+LD = link.exe
+
+reg_query = $(call filter_out2,$(subst $2,,$(shell reg query "$2" -v "$1" 2>nul)))
+fix_path = $(subst $(SPACE),\ ,$(subst \,/,$1))
+
+ProgramFiles86w := $(shell cmd /c "echo %PROGRAMFILES(x86)%")
+ProgramFiles86 := $(shell cygpath "$(ProgramFiles86w)")
+
+WindowsSdkDir ?= $(call reg_query,InstallationFolder,HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Microsoft SDKs\Windows\v10.0)
+WindowsSdkDir ?= $(call reg_query,InstallationFolder,HKEY_CURRENT_USER\SOFTWARE\Wow6432Node\Microsoft\Microsoft SDKs\Windows\v10.0)
+WindowsSdkDir ?= $(call reg_query,InstallationFolder,HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SDKs\Windows\v10.0)
+WindowsSdkDir ?= $(call reg_query,InstallationFolder,HKEY_CURRENT_USER\SOFTWARE\Microsoft\Microsoft SDKs\Windows\v10.0)
+WindowsSdkDir := $(WindowsSdkDir)
+
+WindowsSDKVersion ?= $(firstword $(foreach folder,$(subst $(subst \,/,$(WindowsSdkDir)Include/),,$(wildcard $(call fix_path,$(WindowsSdkDir)Include\*))),$(if $(wildcard $(call fix_path,$(WindowsSdkDir)Include/$(folder)/um/Windows.h)),$(folder),)))$(BACKSLASH)
+WindowsSDKVersion := $(WindowsSDKVersion)
+
+VsInstallBuildTools = $(ProgramFiles86)/Microsoft Visual Studio/2017/BuildTools
+VsInstallEnterprise = $(ProgramFiles86)/Microsoft Visual Studio/2017/Enterprise
+VsInstallProfessional = $(ProgramFiles86)/Microsoft Visual Studio/2017/Professional
+VsInstallCommunity = $(ProgramFiles86)/Microsoft Visual Studio/2017/Community
+
+VsInstallRoot ?= $(shell if [ -d "$(VsInstallBuildTools)" ]; then echo "$(VsInstallBuildTools)"; fi)
+ifeq ($(VsInstallRoot), )
+  VsInstallRoot = $(shell if [ -d "$(VsInstallEnterprise)" ]; then echo "$(VsInstallEnterprise)"; fi)
+endif
+ifeq ($(VsInstallRoot), )
+  VsInstallRoot = $(shell if [ -d "$(VsInstallProfessional)" ]; then echo "$(VsInstallProfessional)"; fi)
+endif
+ifeq ($(VsInstallRoot), )
+  VsInstallRoot = $(shell if [ -d "$(VsInstallCommunity)" ]; then echo "$(VsInstallCommunity)"; fi)
+endif
+VsInstallRoot := $(VsInstallRoot)
+
+VcCompilerToolsVer := $(shell cat "$(VsInstallRoot)/VC/Auxiliary/Build/Microsoft.VCToolsVersion.default.txt" | grep -o '[0-9\.]*')
+VcCompilerToolsDir := $(VsInstallRoot)/VC/Tools/MSVC/$(VcCompilerToolsVer)
+
+WindowsSDKSharedIncludeDir := $(shell cygpath -w "$(WindowsSdkDir)\Include\$(WindowsSDKVersion)\shared")
+WindowsSDKUCRTIncludeDir := $(shell cygpath -w "$(WindowsSdkDir)\Include\$(WindowsSDKVersion)\ucrt")
+WindowsSDKUMIncludeDir := $(shell cygpath -w "$(WindowsSdkDir)\Include\$(WindowsSDKVersion)\um")
+WindowsSDKUCRTLibDir := $(shell cygpath -w "$(WindowsSdkDir)\Lib\$(WindowsSDKVersion)\ucrt\$(TargetArchMoniker)")
+WindowsSDKUMLibDir := $(shell cygpath -w "$(WindowsSdkDir)\Lib\$(WindowsSDKVersion)\um\$(TargetArchMoniker)")
+
+# For some reason the HostX86 compiler doesn't like compiling for x64
+# ("no such file" opening a shared library), and vice-versa.
+# Work around it for now by using the strictly x86 compiler for x86, and x64 for x64.
+# NOTE: What about ARM?
+ifneq (,$(findstring x64,$(TargetArchMoniker)))
+  VCCompilerToolsBinDir := $(VcCompilerToolsDir)\bin\HostX64
+else
+  VCCompilerToolsBinDir := $(VcCompilerToolsDir)\bin\HostX86
+endif
+
+PATH := $(shell IFS=$$'\n'; cygpath "$(VCCompilerToolsBinDir)/$(TargetArchMoniker)"):$(PATH)
+PATH := $(PATH):$(shell IFS=$$'\n'; cygpath "$(VsInstallRoot)/Common7/IDE")
+INCLUDE := $(shell IFS=$$'\n'; cygpath -w "$(VcCompilerToolsDir)/include")
+LIB := $(shell IFS=$$'\n'; cygpath -w "$(VcCompilerToolsDir)/lib/$(TargetArchMoniker)")
+ifneq (,$(findstring uwp,$(PlatformSuffix)))
+  LIB := $(shell IFS=$$'\n'; cygpath -w "$(LIB)/store")
+endif
+
+export INCLUDE := $(INCLUDE);$(WindowsSDKSharedIncludeDir);$(WindowsSDKUCRTIncludeDir);$(WindowsSDKUMIncludeDir)
+export LIB := $(LIB);$(WindowsSDKUCRTLibDir);$(WindowsSDKUMLibDir)
+TARGET := $(TARGET_NAME)_libretro.dll
+PSS_STYLE :=2
+LDFLAGS += -DLL
+
+############
+# Extensions
+
+OBJEXT = .obj
+SOEXT  = .dll
+
+################
+# Platform setup
+
+STATIC_LINKING = 0
+platform       = msvc
+PLATDEFS       = 
+PLATCFLAGS     = $(COREDEFINES) -DWIN32 -D_WINDOWS -D_USRDLL -D_CRT_SECURE_NO_WARNINGS -DWINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP  -FS -EHsc
+PLATCXXFLAGS   = $(PLATCFLAGS)
+#PLATLDFLAGS   = -shared -lm
+#PLATLDXFLAGS   = -shared -lm
+
+################
+# libretro setup
+
+RETRODEFS     = -D__LIBRETRO__ -wd4710 -wd4711 -wd4127 -wd4204 -wd4242 -wd4244 -wd4820 -wd4214 -wd4100 -wd4738 -wd4706 -wd4668 -wd4245 -wd4255 -wd4389 -wd4305 -wd4113 -wd4514
+RETROCFLAGS   = 
+RETROCXXFLAGS =
+RETROLDFLAGS  =
+RETROLDXFLAGS =
+
+#################
+# Final variables
+
+DEFINES  = $(PLATDEFS) $(COREDEFINES) $(RETRODEFS)
+CFLAGS   = $(PLATCFLAGS) $(RETROCFLAGS) $(DEFINES) $(INCLUDES)
+CXXFLAGS = $(PLATCXXFLAGS) $(RETROCXXFLAGS) $(DEFINES) $(INCLUDES)
+LDFLAGS  = $(PLATLDFLAGS) $(RETROLDFLAGS)
+LDXFLAGS = $(PLATLDXFLAGS) $(RETROLDXFLAGS)
+
+########
+# Tuning
+
+ifeq ($(DEBUG),1)
+  CFLAGS   += -Od -Zi -D_DEBUG
+  CXXFLAGS += -Od -Zi -D_DEBUG
+  LDFLAGS  += -DEBUG -DLL
+else
+  CFLAGS   += -O2 -DNDEBUG
+  CXXFLAGS += -O2 -DNDEBUG
+  LDFLAGS  += -DLL
+endif
+
+ifneq ($(LOG_PERFORMANCE),)
+  CFLAGS   += -DLOG_PERFORMANCE
+  CXXFLAGS += -DLOG_PERFORMANCE
+endif
+
+###############
+# Include rules
+
+include $(BUILD_DIR)/Makefile.rules
