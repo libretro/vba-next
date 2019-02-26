@@ -51,6 +51,12 @@ else ifeq ($(platform),windows_msvc2010_x86)
 include $(BUILD_DIR)/Makefile.windows_msvc2010_x86
 else ifeq ($(platform),windows_msvc2010_x64)
 include $(BUILD_DIR)/Makefile.windows_msvc2010_x64
+else ifeq ($(platform),windows_msvc2017_desktop_x86)
+include $(BUILD_DIR)/Makefile.windows_msvc2017_desktop_x86
+else ifeq ($(platform),windows_msvc2017_desktop_x64)
+include $(BUILD_DIR)/Makefile.windows_msvc2017_desktop_x64
+else ifeq ($(platform),windows_msvc2017_desktop_arm)
+include $(BUILD_DIR)/Makefile.windows_msvc2017_desktop_arm
 else ifeq ($(platform),wii_ppc)
 include $(BUILD_DIR)/Makefile.wii_ppc
 else ifeq ($(platform),windows_x86)
