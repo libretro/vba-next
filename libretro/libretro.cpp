@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "libretro.h"
+#include "libretro_core_options.h"
 
 #include "../src/system.h"
 #include "../src/port.h"
@@ -66,7 +67,7 @@ static bool scan_area(const uint8_t *data, unsigned size)
    return false;
 }
 
-static void adjust_save_ram()
+static void adjust_save_ram(void)
 {
    if (scan_area(libretro_save_buf, 512) &&
          !scan_area(libretro_save_buf + 512, sizeof(libretro_save_buf) - 512))
@@ -142,15 +143,7 @@ void retro_set_environment(retro_environment_t cb)
 {
    environ_cb = cb;
 
-   struct retro_variable variables[] = {
-	  { "vbanext_bios", "Use bios if available (Restart); enabled|disabled" },
-#if USE_FRAME_SKIP
-	  { "vbanext_frameskip", "Frameskip; 0|1/3|1/2|1|2|3|4" },
-#endif
-      { NULL, NULL },
-   };
-
-   cb(RETRO_ENVIRONMENT_SET_VARIABLES, variables);
+   libretro_set_core_options(environ_cb);
 }
 
 void retro_get_system_info(struct retro_system_info *info)
@@ -399,7 +392,7 @@ static void load_image_preferences (void)
 }
 
 #if USE_FRAME_SKIP
-static int get_frameskip_code()
+static int get_frameskip_code(void)
 {
 	struct retro_variable var;
 
@@ -756,7 +749,7 @@ void systemOnWriteDataToSoundBuffer(int16_t *finalWave, int length)
    g_audio_frames += frames;
 }
 
-void systemDrawScreen()
+void systemDrawScreen(void)
 {
    video_cb(pix, 240, 160, 512); //last arg is pitch
    g_video_frames++;
