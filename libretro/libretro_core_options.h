@@ -158,7 +158,7 @@ struct retro_core_option_definition *option_defs_intl[RETRO_LANGUAGE_LAST] = {
    NULL,           /* RETRO_LANGUAGE_VIETNAMESE */
    NULL,           /* RETRO_LANGUAGE_ARABIC */
    NULL,           /* RETRO_LANGUAGE_GREEK */
-   option_defs_tr, /* RETRO_LANGUAGE_TURKISH */
+   NULL,           /* RETRO_LANGUAGE_TURKISH */
 };
 
 /*
@@ -235,12 +235,6 @@ static INLINE void libretro_set_core_options(retro_environment_t environ_cb)
          size_t default_index                   = 0;
 
          values_buf[i] = NULL;
-
-         /* Skip options that are irrelevant when using the
-          * old style core options interface */
-         if ((strcmp(key, "snes9x_show_lightgun_settings") == 0) ||
-             (strcmp(key, "snes9x_show_advanced_av_settings") == 0))
-            continue;
 
          if (desc)
          {
