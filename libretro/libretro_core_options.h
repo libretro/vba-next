@@ -100,6 +100,39 @@ struct retro_core_option_definition option_defs_us[] = {
 
 /* RETRO_LANGUAGE_TURKISH */
 
+struct retro_core_option_definition option_defs_tr[] = {
+   {
+      "vbanext_bios",
+      "Varsa BIOS'u kullanın (Yeniden Başlatma Gerekir)",
+      "RetroArch'ın sistem dizininde bulunan BIOS'u kullanır.",
+      {
+         { "enabled", NULL },
+         { "disabled", NULL },
+         { NULL, NULL},
+      },
+      "enabled"
+   },
+#ifdef USE_FRAME_SKIP
+   {
+      "vbanext_frameskip",
+      "Kare atlama",
+      "",
+      {
+         { "0",         NULL },
+         { "1/3",          NULL },
+         { "1/2",          NULL },
+         { "1",          NULL },
+         { "2",          NULL },
+         { "3",          NULL },
+         { "4",          NULL },
+         { NULL, NULL},
+      },
+      "0"
+   },
+#endif
+   { NULL, NULL, NULL, {{0}}, NULL },
+};
+
 /*
  ********************************
  * Language Mapping
