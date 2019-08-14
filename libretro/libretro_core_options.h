@@ -7,6 +7,28 @@
 #include <libretro.h>
 #include <retro_inline.h>
 
+#ifndef HAVE_NO_LANGEXTRA
+#include "libretro_core_options_intl.h"
+#endif
+
+/*
+ ********************************
+ * VERSION: 1.3
+ ********************************
+ *
+ * - 1.3: Move translations to libretro_core_options_intl.h
+ *        - libretro_core_options_intl.h includes BOM and utf-8
+ *          fix for MSVC 2010-2013
+ *        - Added HAVE_NO_LANGEXTRA flag to disable translations
+ *          on platforms/compilers without BOM support
+ * - 1.2: Use core options v1 interface when
+ *        RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION is >= 1
+ *        (previously required RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION == 1)
+ * - 1.1: Support generation of core options v0 retro_core_option_value
+ *        arrays containing options with a single value
+ * - 1.0: First commit
+*/
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -64,81 +86,13 @@ struct retro_core_option_definition option_defs_us[] = {
    { NULL, NULL, NULL, {{0}}, NULL },
 };
 
-/* RETRO_LANGUAGE_JAPANESE */
-
-/* RETRO_LANGUAGE_FRENCH */
-
-/* RETRO_LANGUAGE_SPANISH */
-
-/* RETRO_LANGUAGE_GERMAN */
-
-/* RETRO_LANGUAGE_ITALIAN */
-
-/* RETRO_LANGUAGE_DUTCH */
-
-/* RETRO_LANGUAGE_PORTUGUESE_BRAZIL */
-
-/* RETRO_LANGUAGE_PORTUGUESE_PORTUGAL */
-
-/* RETRO_LANGUAGE_RUSSIAN */
-
-/* RETRO_LANGUAGE_KOREAN */
-
-/* RETRO_LANGUAGE_CHINESE_TRADITIONAL */
-
-/* RETRO_LANGUAGE_CHINESE_SIMPLIFIED */
-
-/* RETRO_LANGUAGE_ESPERANTO */
-
-/* RETRO_LANGUAGE_POLISH */
-
-/* RETRO_LANGUAGE_VIETNAMESE */
-
-/* RETRO_LANGUAGE_ARABIC */
-
-/* RETRO_LANGUAGE_GREEK */
-
-/* RETRO_LANGUAGE_TURKISH */
-
-struct retro_core_option_definition option_defs_tr[] = {
-   {
-      "vbanext_bios",
-      "Varsa BIOS'u kullanın (Yeniden Başlatma Gerekir)",
-      "RetroArch'ın sistem dizininde bulunan BIOS'u kullanır.",
-      {
-         { "enabled", NULL },
-         { "disabled", NULL },
-         { NULL, NULL},
-      },
-      "enabled"
-   },
-#ifdef USE_FRAME_SKIP
-   {
-      "vbanext_frameskip",
-      "Kare atlama",
-      "",
-      {
-         { "0",         NULL },
-         { "1/3",          NULL },
-         { "1/2",          NULL },
-         { "1",          NULL },
-         { "2",          NULL },
-         { "3",          NULL },
-         { "4",          NULL },
-         { NULL, NULL},
-      },
-      "0"
-   },
-#endif
-   { NULL, NULL, NULL, {{0}}, NULL },
-};
-
 /*
  ********************************
  * Language Mapping
  ********************************
 */
 
+#ifndef HAVE_NO_LANGEXTRA
 struct retro_core_option_definition *option_defs_intl[RETRO_LANGUAGE_LAST] = {
    option_defs_us, /* RETRO_LANGUAGE_ENGLISH */
    NULL,           /* RETRO_LANGUAGE_JAPANESE */
@@ -160,6 +114,7 @@ struct retro_core_option_definition *option_defs_intl[RETRO_LANGUAGE_LAST] = {
    NULL,           /* RETRO_LANGUAGE_GREEK */
    NULL,           /* RETRO_LANGUAGE_TURKISH */
 };
+#endif
 
 /*
  ********************************
@@ -168,7 +123,8 @@ struct retro_core_option_definition *option_defs_intl[RETRO_LANGUAGE_LAST] = {
 */
 
 /* Handles configuration/setting of core options.
- * Should only be called inside retro_set_environment().
+ * Should be called as early as possible - ideally inside
+ * retro_set_environment(), and no later than retro_load_game()
  * > We place the function body in the header to avoid the
  *   necessity of adding more .c files (i.e. want this to
  *   be as painless as possible for core devs)
@@ -181,8 +137,9 @@ static INLINE void libretro_set_core_options(retro_environment_t environ_cb)
    if (!environ_cb)
       return;
 
-   if (environ_cb(RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION, &version) && (version == 1))
+   if (environ_cb(RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION, &version) && (version >= 1))
    {
+#ifndef HAVE_NO_LANGEXTRA
       struct retro_core_options_intl core_options_intl;
       unsigned language = 0;
 
@@ -194,21 +151,18 @@ static INLINE void libretro_set_core_options(retro_environment_t environ_cb)
          core_options_intl.local = option_defs_intl[language];
 
       environ_cb(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_INTL, &core_options_intl);
+#else
+      environ_cb(RETRO_ENVIRONMENT_SET_CORE_OPTIONS, &option_defs_us);
+#endif
    }
    else
    {
       size_t i;
-      size_t option_index              = 0;
       size_t num_options               = 0;
       struct retro_variable *variables = NULL;
       char **values_buf                = NULL;
 
-      /* Determine number of options
-       * > Note: We are going to skip a number of irrelevant
-       *   core options when building the retro_variable array,
-       *   but we'll allocate space for all of them. The difference
-       *   in resource usage is negligible, and this allows us to
-       *   keep the code 'cleaner' */
+      /* Determine number of options */
       while (true)
       {
          if (option_defs_us[num_options].key)
@@ -258,7 +212,7 @@ static INLINE void libretro_set_core_options(retro_environment_t environ_cb)
             }
 
             /* Build values string */
-            if (num_values > 1)
+            if (num_values > 0)
             {
                size_t j;
 
@@ -287,11 +241,10 @@ static INLINE void libretro_set_core_options(retro_environment_t environ_cb)
             }
          }
 
-         variables[option_index].key   = key;
-         variables[option_index].value = values_buf[i];
-         option_index++;
+         variables[i].key   = key;
+         variables[i].value = values_buf[i];
       }
-      
+
       /* Set variables */
       environ_cb(RETRO_ENVIRONMENT_SET_VARIABLES, variables);
 
