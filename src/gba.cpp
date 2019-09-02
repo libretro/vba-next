@@ -7333,15 +7333,12 @@ u16 pa,  u16 pb, u16 pc,  u16 pd, int& currentX, int& currentY, int changed)
 			unsigned tileY = yyy & 7;
 			unsigned tileYshift = (tileY<<3);
 
-			u32 x0 = max(  0, (int32_t)(             + (-realX + dx - 1)) / dx);
-			u32 x1 = min(240, (int32_t)((sizeX << 8) + (-realX + dx - 1)) / dx);
-			
-			if (x1 >= sizeX)
-				goto skipLine;
+			s32 x0 = max(  0, (s32)(             + (-realX + dx - 1)) / dx);
+			s32 x1 = min(240, (s32)((sizeX << 8) + (-realX + dx - 1)) / dx);
 
 			realX += dx * x0;
 
-			for(u32 x = x0; x < x1; ++x)
+			for(s32 x = x0; x < x1; ++x)
 			{
 				unsigned xxx = (realX >> 8);
 
