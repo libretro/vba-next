@@ -518,8 +518,8 @@ CXXFLAGS += -D_CRT_SECURE_NO_DEPRECATE
 else
 	EXT    ?= dll
 	TARGET := $(TARGET_NAME)_libretro.$(EXT)
-   CC = gcc
-   CXX = g++
+   CC ?= gcc
+   CXX ?= g++
    SHARED := -shared -static-libgcc -static-libstdc++ -Wl,-no-undefined -Wl,-version-script=$(LIBRETRO_DIR)/link.T
 	TILED_RENDERING=1
 endif
