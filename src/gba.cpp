@@ -899,18 +899,18 @@ static INLINE u32 CPUReadMemory(u32 address)
 			/* palette RAM */
 			value = READ32LE(paletteRAM + (address & 0x3fC));
 			break;
-		case 0x06:
+		case 0x06: {
 			/* VRAM */
-			address = (address & 0x1fffc);
-			if ((R_DISPCNT_Video_Mode >2) && ((address & 0x1C000) == 0x18000))
+			u32 addr = (address & 0x1fffc);
+			if ((R_DISPCNT_Video_Mode > 2) && ((addr & 0x1C000) == 0x18000))
 			{
 				value = 0;
 				break;
 			}
-			if ((address & 0x18000) == 0x18000)
-				address &= 0x17fff;
-			value = READ32LE(vram + address);
-			break;
+			if ((addr & 0x18000) == 0x18000)
+				addr &= 0x17ffc;
+			value = READ32LE(vram + addr);
+		} break;
 		case 0x07:
 			/* OAM RAM */
 			value = READ32LE(oam + (address & 0x3FC));
@@ -992,17 +992,17 @@ static INLINE u32 CPUReadHalfWord(u32 address)
 		case 5:
 			value = READ16LE(paletteRAM + (address & 0x3fe));
 			break;
-		case 6:
-			address = (address & 0x1fffe);
-			if ((R_DISPCNT_Video_Mode >2) && ((address & 0x1C000) == 0x18000))
+		case 6: {
+			u32 addr = (address & 0x1fffe);
+			if ((R_DISPCNT_Video_Mode > 2) && ((addr & 0x1C000) == 0x18000))
 			{
 				value = 0;
 				break;
 			}
-			if ((address & 0x18000) == 0x18000)
-				address &= 0x17fff;
-			value = READ16LE(vram + address);
-			break;
+			if ((addr & 0x18000) == 0x18000)
+				addr &= 0x17fff;
+			value = READ16LE(vram + addr);
+		} break;
 		case 7:
 			value = READ16LE(oam + (address & 0x3fe));
 			break;
