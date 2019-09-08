@@ -7567,9 +7567,10 @@ static INLINE void gfxDrawRotScreen256(int &currentX, int& currentY, int changed
 	memset(RENDERER_LINE[Layer_BG2], -1, 240 * sizeof(u32));
 	for(u32 x = 0; x < 240; ++x)
 	{
-		u8 color = screenBase[yyy * 240 + xxx];
-		if(unsigned(xxx) < sizeX && unsigned(yyy) < sizeY && color)
-			RENDERER_LINE[Layer_BG2][x] = (READ16LE(&palette[color])|prio);
+		if(unsigned(xxx) < sizeX && unsigned(yyy) < sizeY) {
+			u8 color = screenBase[yyy * 240 + xxx];
+			if (color) RENDERER_LINE[Layer_BG2][x] = (READ16LE(&palette[color]) | prio);
+		}
 		realX += dx;
 		realY += dy;
 
