@@ -2112,8 +2112,9 @@ static variable_desc gba_state [] =
 
 	// Emulator
 	LOAD( int, soundEnableFlag ),
+	LOAD( int, soundTicks ),
 
-	SKIP( int [15], room_for_expansion ),
+	SKIP( int [14], room_for_expansion ),
 
 	{ NULL, 0 }
 };
