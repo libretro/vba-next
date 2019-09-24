@@ -16,7 +16,7 @@
 #include "port.h"
 #include "gba.h"
 #include "memory.h"
-#include "sound.h" 
+#include "sound.h"
 
 #ifdef ELF
 #include "elf.h"
@@ -103,7 +103,7 @@ static void hardware_reset() {
 	hardware.tilt_x = 0;
 	hardware.tilt_y = 0;
 	hardware.direction = 0;
-	hardware.pinState = 0;	
+	hardware.pinState = 0;
 	hardware.gyroSample = 0;
 	hardware.readWrite = false;
 	hardware.gyroEdge = false;
@@ -345,13 +345,13 @@ static INLINE u32 gfxDecreaseBrightness(u32 color, int coeff) {
 	return (color >> 16) | color;
 }
 
-static u32 AlphaClampLUT[64] = 
+static u32 AlphaClampLUT[64] =
 {
 	0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
 	0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F,
 	0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F,
 	0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F
-};  
+};
 
 #define GFX_ALPHA_BLEND(color, color2, ca, cb) {                                                         \
 	int r = AlphaClampLUT[(((color & 0x1F) * ca) >> 4) + (((color2 & 0x1F) * cb) >> 4)];                 \
@@ -406,7 +406,7 @@ const int table [0x40] =
 		0xFF38,0xFF39,0xFF3A,0xFF3B,0xFF3C,0xFF3D,0xFF3E,0xFF3F,
 };
 
-static int coeff[32] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 
+static int coeff[32] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
 			11, 12, 13, 14, 15, 16, 16, 16, 16,
 			16, 16, 16, 16, 16, 16, 16, 16, 16,
 			16, 16, 16};
@@ -834,8 +834,8 @@ static uint8_t* CPUDecodeAddress(uint32_t address) {
 		case 0x08:
 		case 0x09:
 		case 0x0A:
-		case 0x0B: 
-		case 0x0C: 
+		case 0x0B:
+		case 0x0C:
 			/* gamepak ROM */
 			return rom + (address & 0x1FFFFFC);
 		case 0x0D:
@@ -852,7 +852,7 @@ unreadable:
 				value = CPUReadHalfWordQuick(bus.reg[15].I + (address & 2));
 			else
 				value = CPUReadHalfWordQuick(bus.reg[15].I);
-			*/			
+			*/
 			break;
 	}
 
@@ -918,8 +918,8 @@ static INLINE u32 CPUReadMemory(u32 address)
 		case 0x08:
 		case 0x09:
 		case 0x0A:
-		case 0x0B: 
-		case 0x0C: 
+		case 0x0B:
+		case 0x0C:
 			/* gamepak ROM */
 			value = READ32LE(rom + (address&0x1FFFFFC));
 			break;
@@ -931,7 +931,7 @@ static INLINE u32 CPUReadMemory(u32 address)
 		  	value = flashRead(address) * 0x01010101;
             break;
 		default:
-unreadable:	
+unreadable:
 			if (armState)
             	value = CPUReadMemoryQuick(bus.reg[15].I);
             else
@@ -1213,7 +1213,7 @@ static INLINE void CPUWriteHalfWord(u32 address, u16 value)
 #endif
 					rtcWrite(address, value);
 				break;
-			}	
+			}
 			break;
 		case 13:
 			if(cpuEEPROMEnabled)
@@ -1552,13 +1552,13 @@ static void BIOS_CpuSet (void)
 			}
 		} else {
 #if USE_TWEAK_MEMFUNC
-			if(source > 0x0EFFFFFF) {	
+			if(source > 0x0EFFFFFF) {
 				while(count > 0) {
 					CPUWriteMemory(dest, 0x1CAD1CAD);
 					dest += 4;
 					count--;
 				}
-			} else {	
+			} else {
 				while(count > 0) {
 					CPUWriteMemory(dest, CPUReadMemory(source));
 					source += 4;
@@ -4532,7 +4532,7 @@ static  void armB00(u32 opcode)
 	bus.reg[15].I += 4;
 	ARM_PREFETCH;
 
-	clockTicks = CLOCKTICKS_UPDATE_TYPE32P;	
+	clockTicks = CLOCKTICKS_UPDATE_TYPE32P;
 	bus.busPrefetchCount = 0;
 }
 
@@ -7777,7 +7777,7 @@ static void gfxDrawSprites (void)
 				lineOBJpix -= (sizeX-2);
 
 				if (a0 & 0x0100)
-					lineOBJpix -= (10+sizeX); 
+					lineOBJpix -= (10+sizeX);
 			}
 			continue;
 		}
@@ -8447,7 +8447,7 @@ static void gfxDrawOBJWin (void)
 int saveType = 0;
 bool useBios = false;
 bool skipBios = false;
-bool cpuIsMultiBoot = false; 
+bool cpuIsMultiBoot = false;
 int cpuSaveType = 0;
 bool enableRtc = false;
 bool mirroringEnable = false;
@@ -9165,7 +9165,7 @@ static void applyCartridgeOverride(char* code) {
 int CPULoadRom(const char * file)
 {
 	if (!CPUSetupBuffers()) return 0;
-	
+
 	uint8_t *whereToLoad = cpuIsMultiBoot ? workRAM : rom;
 
 	if(file != NULL)
@@ -9247,7 +9247,7 @@ void ThreadedRendererStart() {
 		threaded_renderer_contexts[u].renderer_thread_id =
 			thread_run((u == 0) ? threaded_renderer_loop0 : threaded_renderer_loop, reinterpret_cast<void*>(intptr_t(u)),
 #if VITA
-				(u == 0) ? THREAD_PRIORITY_NORMAL : THREAD_PRIORITY_LOW);	
+				(u == 0) ? THREAD_PRIORITY_NORMAL : THREAD_PRIORITY_LOW);
 #else
 				THREAD_PRIORITY_NORMAL);
 #endif
@@ -9698,7 +9698,7 @@ static void mode0RenderLineAll (void)
 /*
 Mode 1 is a tiled graphics mode, but with background layer 2 supporting scaling and rotation.
 There is no layer 3 in this mode.
-Layers 0 and 1 can be either 16 colours (with 16 different palettes) or 256 colours. 
+Layers 0 and 1 can be either 16 colours (with 16 different palettes) or 256 colours.
 There are 1024 tiles available.
 Layer 2 is 256 colours and allows only 256 tiles.
 
@@ -9740,7 +9740,7 @@ static void mode1RenderLine (void)
 
 		uint8_t li1 = (uint8_t)(RENDERER_LINE[Layer_BG1][x]>>24);
 		uint8_t li2 = (uint8_t)(RENDERER_LINE[Layer_BG2][x]>>24);
-		uint8_t li4 = (uint8_t)(RENDERER_LINE[Layer_OBJ][x]>>24);	
+		uint8_t li4 = (uint8_t)(RENDERER_LINE[Layer_OBJ][x]>>24);
 
 		uint8_t r = 	(li2 < li1) ? (li2) : (li1);
 
@@ -9840,7 +9840,7 @@ static void mode1RenderLineNoWindow (void)
 
 		uint8_t li1 = (uint8_t)(RENDERER_LINE[Layer_BG1][x]>>24);
 		uint8_t li2 = (uint8_t)(RENDERER_LINE[Layer_BG2][x]>>24);
-		uint8_t li4 = (uint8_t)(RENDERER_LINE[Layer_OBJ][x]>>24);	
+		uint8_t li4 = (uint8_t)(RENDERER_LINE[Layer_OBJ][x]>>24);
 
 		uint8_t r = 	(li2 < li1) ? (li2) : (li1);
 
@@ -9919,7 +9919,7 @@ static void mode1RenderLineNoWindow (void)
 
 			uint8_t li0 = (uint8_t)(RENDERER_LINE[Layer_BG0][x]>>24);
 			uint8_t li1 = (uint8_t)(RENDERER_LINE[Layer_BG1][x]>>24);
-			uint8_t li2 = (uint8_t)(RENDERER_LINE[Layer_BG2][x]>>24);	
+			uint8_t li2 = (uint8_t)(RENDERER_LINE[Layer_BG2][x]>>24);
 
 			uint8_t r = 	(li1 < li0) ? (li1) : (li0);
 
@@ -9971,7 +9971,7 @@ static void mode1RenderLineAll (void)
 	uint16_t* lineMix = GET_LINE_MIX;
 
 	uint32_t backdrop = RENDERER_BACKDROP;
-	
+
 	bool inWindow0 = false;
 	bool inWindow1 = false;
 
@@ -10159,7 +10159,7 @@ static void mode2RenderLine (void)
 
 		uint8_t li2 = (uint8_t)(RENDERER_LINE[Layer_BG2][x]>>24);
 		uint8_t li3 = (uint8_t)(RENDERER_LINE[Layer_BG3][x]>>24);
-		uint8_t li4 = (uint8_t)(RENDERER_LINE[Layer_OBJ][x]>>24);	
+		uint8_t li4 = (uint8_t)(RENDERER_LINE[Layer_OBJ][x]>>24);
 
 		uint8_t r = 	(li3 < li2) ? (li3) : (li2);
 
@@ -10245,7 +10245,7 @@ static void mode2RenderLineNoWindow (void)
 
 		uint8_t li2 = (uint8_t)(RENDERER_LINE[Layer_BG2][x]>>24);
 		uint8_t li3 = (uint8_t)(RENDERER_LINE[Layer_BG3][x]>>24);
-		uint8_t li4 = (uint8_t)(RENDERER_LINE[Layer_OBJ][x]>>24);	
+		uint8_t li4 = (uint8_t)(RENDERER_LINE[Layer_OBJ][x]>>24);
 
 		uint8_t r = 	(li3 < li2) ? (li3) : (li2);
 
@@ -10545,7 +10545,7 @@ static void mode3RenderLine (void)
 
 template<int renderer_idx>
 static void mode3RenderLineNoWindow (void)
-{	
+{
 INIT_RENDERER_CONTEXT(renderer_idx);
 
 #if !DEBUG_RENDERER_MODE3
@@ -10635,7 +10635,7 @@ INIT_RENDERER_CONTEXT(renderer_idx);
 
 template<int renderer_idx>
 static void mode3RenderLineAll (void)
-{	
+{
 	INIT_RENDERER_CONTEXT(renderer_idx);
 
 #if !DEBUG_RENDERER_MODE3
@@ -10816,7 +10816,7 @@ static void mode4RenderLine (void)
 template<int renderer_idx>
 static void mode4RenderLineNoWindow (void)
 {
-	INIT_RENDERER_CONTEXT(renderer_idx);	
+	INIT_RENDERER_CONTEXT(renderer_idx);
 
 #if !DEBUG_RENDERER_MODE4
 	return;
@@ -10916,7 +10916,7 @@ static void mode4RenderLineAll (void)
 #endif
 	uint16_t* lineMix = GET_LINE_MIX;
 	uint32_t backdrop = RENDERER_BACKDROP;
-	
+
 	bool inWindow0 = false;
 	bool inWindow1 = false;
 
@@ -11023,7 +11023,7 @@ static void mode4RenderLineAll (void)
 }
 
 /*
-Mode 5 is a low resolution (160x128) 15-bit colour bitmap graphics mode 
+Mode 5 is a low resolution (160x128) 15-bit colour bitmap graphics mode
 with 2 swappable pages!
 It has a single layer, background layer 2, lower resolution than the screen.
 It doesn't support scrolling, flipping, rotation or tiles.
@@ -11369,7 +11369,7 @@ static void threaded_renderer_loop(void* p) {
 		return;
 	}
 
-	while(renderer_ctx.renderer_control == 1) {		
+	while(renderer_ctx.renderer_control == 1) {
 		threaded_renderer_loop_impl();
 	}
 
@@ -11409,7 +11409,7 @@ static void fetchBackgroundOffset(int video_mode) {
 }
 
 static void postRender() {
-	
+
 	int video_mode = R_DISPCNT_Video_Mode;
 	bool draw_objwin = (graphics.layerEnable & 0x9000) == 0x9000;
 	bool draw_sprites = R_DISPCNT_Screen_Display_OBJ;
@@ -11496,7 +11496,7 @@ static void postRender() {
 	renderer_ctx.io_registers[REG_IME] = io_registers[REG_IME];
 	renderer_ctx.io_registers[REG_HALTCNT] = io_registers[REG_HALTCNT];
 
-	renderer_ctx.bg2c = gfxBG2Changed;	
+	renderer_ctx.bg2c = gfxBG2Changed;
 	renderer_ctx.bg2x = gfxBG2X;
 	renderer_ctx.bg2y = gfxBG2Y;
 	renderer_ctx.bg2x_l = BG2X_L;
@@ -12050,7 +12050,7 @@ void CPUUpdateRegister(uint32_t address, uint16_t value)
 						CPUCompareVCOUNT();
 					}
 				}
-				
+
 				CPUUpdateRender();
 
 				// we only care about changes in BG0-BG3
@@ -12202,10 +12202,10 @@ void CPUUpdateRegister(uint32_t address, uint16_t value)
 		case 0x78:
 		case 0x7c:
 		case 0x80:
-		case 0x84:			
+		case 0x84:
 			soundEvent_u8(table[(int32_t)(address & 0xFF) - 0x60], (uint32_t)(address & 0xFF), (uint8_t)(value & 0xFF));
 			soundEvent_u8(table[(int32_t)((address & 0xFF) + 1) - 0x60], (uint32_t)((address & 0xFF) + 1), (uint8_t)(value >> 8));
-			break;			
+			break;
 		case 0x82:
 		case 0x88:
 		case 0xa0:
@@ -12478,7 +12478,7 @@ void CPUUpdateRegister(uint32_t address, uint16_t value)
 }
 
 void CPUInit(const char *biosFileName, bool useBiosFile)
-{	
+{
 #ifdef MSB_FIRST
 	if(!cpuBiosSwapped)
    {
@@ -12743,7 +12743,7 @@ void CPUReset (void)
 		}
 #endif
 	}
-	
+
 	armState = true;
 	C_FLAG = V_FLAG = N_FLAG = Z_FLAG = false;
 	UPDATE_REG(0x00, io_registers[REG_DISPCNT]);
@@ -12848,11 +12848,11 @@ void CPUReset (void)
 	CPUUpdateWindow1();
 
 	// make sure registers are correctly initialized if not using BIOS
-	if(cpuIsMultiBoot) 
-		BIOS_RegisterRamReset(0xfe); 
-	else if(!useBios && !cpuIsMultiBoot) 
-		BIOS_RegisterRamReset(0xff); 
-		
+	if(cpuIsMultiBoot)
+		BIOS_RegisterRamReset(0xfe);
+	else if(!useBios && !cpuIsMultiBoot)
+		BIOS_RegisterRamReset(0xff);
+
 	switch(cpuSaveType) {
 		case 0: // automatic
 			cpuSramEnabled = true;
@@ -13049,7 +13049,7 @@ updateLoop:
 							UPDATE_REG(0x202, io_registers[REG_IF]);
 						}
 					}
-	
+
 					if(R_VCOUNT >= 228)
 					{
 						//Reaching last line
@@ -13117,7 +13117,7 @@ updateLoop:
 #endif
 #if THREADED_RENDERER
 						postRender();
-#else					
+#else
 						bool draw_objwin = (graphics.layerEnable & 0x9000) == 0x9000;
 						bool draw_sprites = R_DISPCNT_Screen_Display_OBJ;
 
@@ -13125,13 +13125,13 @@ updateLoop:
 						if(draw_sprites) gfxDrawSprites<0>();
 
 						if(renderfunc_type == 2) {
-							memset(RENDERER_LINE[Layer_WIN_OBJ], -1, 240 * sizeof(u32));	// erase all OBJ Win 
+							memset(RENDERER_LINE[Layer_WIN_OBJ], -1, 240 * sizeof(u32));	// erase all OBJ Win
 							if(draw_objwin) gfxDrawOBJWin<0>();
 						}
-					
+
 						GetRenderFunc<0>(renderfunc_mode, renderfunc_type)();
 #endif
-#if USE_FRAME_SKIP					
+#if USE_FRAME_SKIP
 					}
 #endif
 
@@ -15981,8 +15981,8 @@ void cheatsAddCBACode(const char *code, const char *desc)
 void Xbox_cheatsSaveGame(HANDLE file)
 {
   xStorage.WriteStream(file,(char *)cheatsNumber, sizeof(int));
-  xStorage.WriteStream(file,(char *)cheatsList, sizeof(cheatsList)); 
- 
+  xStorage.WriteStream(file,(char *)cheatsList, sizeof(cheatsList));
+
 }
 #endif
 
