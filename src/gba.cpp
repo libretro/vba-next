@@ -3140,16 +3140,15 @@ DEFINE_ALU_INSN_C (1F, 3F, MVNS, YES)
 // OP: OP_MUL, OP_MLA etc.
 // SETCOND: SETCOND_NONE, SETCOND_MUL, or SETCOND_MULL
 // CYCLES: base cycle count (1, 2, or 3)
-#define MUL_INSN(OP, SETCOND, CYCLES) \
+#define MUL_INSN(OP, SETCOND, CYCLES)                   \
     int mult = (opcode & 0x0F);                         \
-    u32 rs = bus.reg[(opcode >> 8) & 0x0F].I;               \
+    u32 rs = bus.reg[(opcode >> 8) & 0x0F].I;           \
     int acc = (opcode >> 12) & 0x0F;   /* or destLo */  \
     int dest = (opcode >> 16) & 0x0F;  /* or destHi */  \
     OP;                                                 \
     SETCOND;                                            \
     if ((s32)rs < 0)                                    \
         rs = ~rs;                                       \
-    clockTicks = CYCLES;                                \
     if ((rs & 0xFFFFFF00) == 0)                         \
         clockTicks += 0;                                \
     else if ((rs & 0xFFFF0000) == 0)                    \
@@ -3160,7 +3159,7 @@ DEFINE_ALU_INSN_C (1F, 3F, MVNS, YES)
         clockTicks += 3;                                \
     if (bus.busPrefetchCount == 0)                          \
         bus.busPrefetchCount = ((bus.busPrefetchCount+1)<<clockTicks) - 1; \
-    clockTicks += 1 + codeTicksAccess(bus.armNextPC, BITS_32);
+    clockTicks += CYCLES + 1 + codeTicksAccess(bus.armNextPC, BITS_32);
 
 #define OP_MUL \
     bus.reg[dest].I = bus.reg[mult].I * rs;
