@@ -74,14 +74,14 @@ static void adjust_save_ram(void)
    {
       libretro_save_size = 512;
       if (log_cb)
-         log_cb(RETRO_LOG_INFO, "Detecting EEprom 8kbit\n");
+         log_cb(RETRO_LOG_DEBUG, "Detecting EEprom 8kbit\n");
    }
    else if (scan_area(libretro_save_buf, 0x2000) && 
          !scan_area(libretro_save_buf + 0x2000, sizeof(libretro_save_buf) - 0x2000))
    {
       libretro_save_size = 0x2000;
       if (log_cb)
-         log_cb(RETRO_LOG_INFO, "Detecting EEprom 64kbit\n");
+         log_cb(RETRO_LOG_DEBUG, "Detecting EEprom 64kbit\n");
    }
 
    else if (scan_area(libretro_save_buf, 0x10000) && 
@@ -89,17 +89,17 @@ static void adjust_save_ram(void)
    {
       libretro_save_size = 0x10000;
       if (log_cb)
-         log_cb(RETRO_LOG_INFO, "Detecting Flash 512kbit\n");
+         log_cb(RETRO_LOG_DEBUG, "Detecting Flash 512kbit\n");
    }
    else if (scan_area(libretro_save_buf, 0x20000) && 
          !scan_area(libretro_save_buf + 0x20000, sizeof(libretro_save_buf) - 0x20000))
    {
       libretro_save_size = 0x20000;
       if (log_cb)
-         log_cb(RETRO_LOG_INFO, "Detecting Flash 1Mbit\n");
+         log_cb(RETRO_LOG_DEBUG, "Detecting Flash 1Mbit\n");
    }
    else if (log_cb)
-      log_cb(RETRO_LOG_INFO, "Did not detect any particular SRAM type.\n");
+      log_cb(RETRO_LOG_WARN, "Did not detect any particular SRAM type.\n");
 
    if (libretro_save_size == 512 || libretro_save_size == 0x2000)
       eepromData = libretro_save_buf;
@@ -205,7 +205,7 @@ void retro_init(void)
 #ifdef FRONTEND_SUPPORTS_RGB565
    enum retro_pixel_format rgb565 = RETRO_PIXEL_FORMAT_RGB565;
    if(environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &rgb565) && log_cb)
-      log_cb(RETRO_LOG_INFO, "Frontend supports RGB565 - will use that instead of XRGB1555.\n");
+      log_cb(RETRO_LOG_DEBUG, "Frontend supports RGB565 - will use that instead of XRGB1555.\n");
 #endif
 
    check_system_specs();
@@ -349,8 +349,9 @@ static void load_image_preferences (void)
 	buffer[2] = rom[0xae];
 	buffer[3] = rom[0xaf];
 	buffer[4] = 0;
+
    if (log_cb)
-      log_cb(RETRO_LOG_INFO, "GameID in ROM is: %s\n", buffer);
+      log_cb(RETRO_LOG_DEBUG, "GameID in ROM is: %s\n", buffer);
 
 	bool found = false;
 	int found_no = 0;
@@ -368,7 +369,7 @@ static void load_image_preferences (void)
 	if(found)
 	{
       if (log_cb)
-         log_cb(RETRO_LOG_INFO, "Found ROM in vba-over list.\n");
+         log_cb(RETRO_LOG_DEBUG, "Found ROM in vba-over list.\n");
 
 		enableRtc = gbaover[found_no].rtcEnabled;
 
@@ -384,10 +385,10 @@ static void load_image_preferences (void)
 
    if (log_cb)
    {
-      log_cb(RETRO_LOG_INFO, "RTC = %d.\n", enableRtc);
-      log_cb(RETRO_LOG_INFO, "flashSize = %d.\n", flashSize);
-      log_cb(RETRO_LOG_INFO, "cpuSaveType = %d.\n", cpuSaveType);
-      log_cb(RETRO_LOG_INFO, "mirroringEnable = %d.\n", mirroringEnable);
+      log_cb(RETRO_LOG_DEBUG, "RTC = %d.\n", enableRtc);
+      log_cb(RETRO_LOG_DEBUG, "flashSize = %d.\n", flashSize);
+      log_cb(RETRO_LOG_DEBUG, "cpuSaveType = %d.\n", cpuSaveType);
+      log_cb(RETRO_LOG_DEBUG, "mirroringEnable = %d.\n", mirroringEnable);
    }
 }
 
@@ -611,12 +612,12 @@ void retro_cheat_set(unsigned index, bool enabled, const char *code)
                codeLine[8] = ' ' ;
                codeLine[13] = '\0' ;
                cheatsAddCBACode(codeLine, name);
-               log_cb(RETRO_LOG_INFO, "Cheat code added: '%s'\n", codeLine);
+               log_cb(RETRO_LOG_DEBUG, "Cheat code added: '%s'\n", codeLine);
             } else if ( codePos == 16 )
             {
                codeLine[16] = '\0' ;
                cheatsAddGSACode(codeLine, name, true);
-               log_cb(RETRO_LOG_INFO, "Cheat code added: '%s'\n", codeLine);
+               log_cb(RETRO_LOG_DEBUG, "Cheat code added: '%s'\n", codeLine);
             } else 
             {
                codeLine[codePos] = '\0' ;
@@ -730,7 +731,7 @@ static unsigned g_video_frames;
 void retro_unload_game(void)
 {
    if (log_cb)
-      log_cb(RETRO_LOG_INFO, "[VBA] Sync stats: Audio frames: %u, Video frames: %u, AF/VF: %.2f\n",
+      log_cb(RETRO_LOG_DEBUG, "[VBA] Sync stats: Audio frames: %u, Video frames: %u, AF/VF: %.2f\n",
             g_audio_frames, g_video_frames, (float)g_audio_frames / g_video_frames);
    g_audio_frames = 0;
    g_video_frames = 0;
@@ -758,7 +759,8 @@ void systemDrawScreen(void)
 
 void systemMessage(const char* fmt, ...)
 {
-   if (!log_cb) return;
+   if (!log_cb)
+      return;
 
    char buffer[256];
    va_list ap;
