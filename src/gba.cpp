@@ -1039,6 +1039,7 @@ static INLINE u32 CPUReadHalfWord(u32 address)
          value =  eepromRead();
          break;
 		case 14:
+		case 15:
          value = flashRead(address) * 0x0101;
          break;
 		default:
@@ -1109,6 +1110,7 @@ static INLINE u8 CPUReadByte(u32 address)
 		case 13:
          	return eepromRead();
 		case 14:
+		case 15:
 #ifdef USE_MOTION_SENSOR
 		if(hardware.sensor)
         {
@@ -1179,6 +1181,7 @@ static INLINE void CPUWriteMemory(u32 address, u32 value)
 			}
 			break;
 		case 0x0E:
+		case 0x0F:
 			if((!eepromInUse) | cpuSramEnabled | cpuFlashEnabled)
 				(*cpuSaveGameFunc)(address, (u8)value);
 			break;
@@ -1235,6 +1238,7 @@ static INLINE void CPUWriteHalfWord(u32 address, u16 value)
 				eepromWrite((u8)value);
 			break;
 		case 14:
+		case 15:
 			if((!eepromInUse) | cpuSramEnabled | cpuFlashEnabled)
 				(*cpuSaveGameFunc)(address, (u8)value);
 			break;
@@ -1350,6 +1354,7 @@ static INLINE void CPUWriteByte(u32 address, u8 b)
 				eepromWrite(b);
 			break;
 		case 14:
+		case 15:
 			if ((saveType != 5) && ((!eepromInUse) | cpuSramEnabled | cpuFlashEnabled))
 			{
 				(*cpuSaveGameFunc)(address, b);
