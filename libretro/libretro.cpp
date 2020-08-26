@@ -24,14 +24,10 @@ static retro_input_state_t input_cb;
 static retro_audio_sample_batch_t audio_batch_cb;
 static retro_environment_t environ_cb;
 
-extern uint64_t joy;
 static bool can_dupe;
-unsigned device_type = 0;
-
 char filename_bios[0x100] = {0};
 
 uint8_t libretro_save_buf[0x20000 + 0x2000];	/* Workaround for broken-by-design GBA save semantics. */
-
 static unsigned libretro_save_size = sizeof(libretro_save_buf);
 
 void *retro_get_memory_data(unsigned id)
@@ -486,7 +482,13 @@ void retro_reset(void)
    CPUReset();
 }
 
-static const unsigned binds[] = {
+#define MAX_BUTTONS 10
+#define TURBO_BUTTONS 2
+static bool option_turboEnable;
+static u32 option_turboDelay;
+static u32 turbo_delay_counter;
+
+static const unsigned binds[MAX_BUTTONS] = {
 	RETRO_DEVICE_ID_JOYPAD_A,
 	RETRO_DEVICE_ID_JOYPAD_B,
 	RETRO_DEVICE_ID_JOYPAD_SELECT,
@@ -499,26 +501,69 @@ static const unsigned binds[] = {
 	RETRO_DEVICE_ID_JOYPAD_L
 };
 
-static const unsigned binds2[] = {
-	RETRO_DEVICE_ID_JOYPAD_B,
-	RETRO_DEVICE_ID_JOYPAD_A,
-	RETRO_DEVICE_ID_JOYPAD_SELECT,
-	RETRO_DEVICE_ID_JOYPAD_START,
-	RETRO_DEVICE_ID_JOYPAD_RIGHT,
-	RETRO_DEVICE_ID_JOYPAD_LEFT,
-	RETRO_DEVICE_ID_JOYPAD_UP,
-	RETRO_DEVICE_ID_JOYPAD_DOWN,
-	RETRO_DEVICE_ID_JOYPAD_R,
-	RETRO_DEVICE_ID_JOYPAD_L
+static const unsigned turbo_binds[TURBO_BUTTONS] = {
+    RETRO_DEVICE_ID_JOYPAD_X,
+    RETRO_DEVICE_ID_JOYPAD_Y
 };
 
 static unsigned has_frame;
 
 static void update_variables(void)
 {
+   struct retro_variable var = { 0 };
 #if USE_FRAME_SKIP
    SetFrameskip(get_frameskip_code());
 #endif
+   var.key = "vbanext_turboenable";
+
+    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value) {
+        option_turboEnable = (!strcmp(var.value, "enabled")) ? true : false;
+    }
+
+    var.key = "vbanext_turbodelay";
+
+    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value) {
+        option_turboDelay = atoi(var.value);
+    }
+}
+
+static void update_input(void)
+{
+   // Reset input states
+   u32 J = 0;
+
+   /* if (retropad_device[0] == RETRO_DEVICE_JOYPAD) */ {
+      for (unsigned button = 0; button < MAX_BUTTONS; button++)
+         J |= input_cb(0, RETRO_DEVICE_JOYPAD, 0, binds[button]) << button;
+
+      if (option_turboEnable) {
+         /* Handle Turbo A & B buttons */
+         bool button_pressed = false;
+         for (unsigned tbutton = 0; tbutton < TURBO_BUTTONS; tbutton++) {
+            if (input_cb(0, RETRO_DEVICE_JOYPAD, 0, turbo_binds[tbutton])) {
+               button_pressed = true;
+               if (!turbo_delay_counter)
+                  J |= 1 << tbutton;
+            }
+         }
+         if (button_pressed) {
+            turbo_delay_counter++;
+            if (turbo_delay_counter > option_turboDelay)
+               /* Reset the toggle if delay value is reached */
+               turbo_delay_counter = 0;
+         }
+         else
+            /* If the button is not pressed, just reset the toggle */
+            turbo_delay_counter = 0;
+      }
+      // Do not allow opposing directions
+      if ((J & 0x30) == 0x30)
+         J &= ~(0x30);
+      else if ((J & 0xC0) == 0xC0)
+         J &= ~(0xC0);
+   }
+
+   joy = J;
 }
 
 void retro_run(void)
@@ -528,27 +573,7 @@ void retro_run(void)
       update_variables();
 
    poll_cb();
-
-   u32 J = 0;
-
-   for (unsigned i = 0; i < 10; i++)
-   {
-      unsigned button = device_type ? binds2[i] : binds[i];
-
-      if (button == RETRO_DEVICE_ID_JOYPAD_LEFT)
-      {
-         if ((J & (1 << RETRO_DEVICE_ID_JOYPAD_RIGHT)) == RETRO_DEVICE_ID_JOYPAD_RIGHT)
-            continue;
-      }
-      else if (button == RETRO_DEVICE_ID_JOYPAD_RIGHT)
-      {
-         if ((J & (1 << RETRO_DEVICE_ID_JOYPAD_LEFT)) == RETRO_DEVICE_ID_JOYPAD_LEFT)
-            continue;
-      }
-      J |= input_cb(0, RETRO_DEVICE_JOYPAD, 0, button) << i;
-   }
-
-   joy = J;
+   update_input();
 
    has_frame = 0;
    UpdateJoypad();
