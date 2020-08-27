@@ -660,6 +660,39 @@ void retro_cheat_set(unsigned index, bool enabled, const char *code)
    free(codeLine) ;
 }
 
+static u32 rom_size = 0;
+
+static void set_memory_maps(void)
+{
+   struct retro_memory_descriptor descs[] = {
+      // flags, ptr, offset, start, select, disconnect, len, address space
+      { 0, bios,              0, 0x00000000, 0,          0, 0x4000,     "BIOS" },
+      { 0, workRAM,           0, 0x02000000, 0,          0, 0x40000,    "EWRAM" },
+      { 0, internalRAM,       0, 0x03000000, 0,          0, 0x8000,     "IWRAM" },
+      { 0, ioMem,             0, 0x04000000, 0,          0, 0x400,      "IOMEM" },
+      { 0, paletteRAM,        0, 0x05000000, 0,          0, 0x400,      "PALRAM" },
+      { 0, vram,              0, 0x06000000, 0xFFFE8000, 0, 0x18000,    "VRAM" },
+      { 0, oam,               0, 0x07000000, 0,          0, 0x400,      "OAM" },
+      { 0, rom,               0, 0x08000000, 0,          0, rom_size,   "ROM-WS0" },
+      { 0, rom,               0, 0x0A000000, 0,          0, rom_size,   "ROM-WS1" },
+      { 0, rom,               0, 0x0C000000, 0,          0, rom_size,   "ROM-WS2" },
+      // normally, only 64K is accessible at-a-time, 128K flash are bankswitched
+      { 0, libretro_save_buf, 0, 0x0E000000, 0,          0, 0x10000,    "SRAM" }
+      // NOTE: the eeprom can be accessed anywhere from D000000h-DFFFFFFh. The need to map
+      // eeprom pointer to a virtual address might be needed for direct and fixed access when time comes
+      // For VBA Next as well as Beetle GBA, eeprom ptr can be accessed from libretro_save_buf[128 * 1024]
+   };
+
+   struct retro_memory_map mmaps = {
+      descs,
+      sizeof(descs) / sizeof(descs[0])
+   };
+
+   bool yes = true;
+   environ_cb(RETRO_ENVIRONMENT_SET_MEMORY_MAPS, &mmaps);
+   environ_cb(RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS, &yes);
+}
+
 bool retro_load_game(const struct retro_game_info *game)
 {
    update_variables();
@@ -675,73 +708,26 @@ bool retro_load_game(const struct retro_game_info *game)
       { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R,     "R" },
       { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT, "Select" },
       { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START, "Start" },
-
+      { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_Y,     "Turbo B" },
+      { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_X,     "Turbo A" },
       { 0 },
    };
 
    environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, desc);
 
 #ifdef GEKKO
-	bool ret = CPULoadRom(game->path);
+	rom_size = CPULoadRom(game->path);
 #else
-   bool ret = CPULoadRomData((const char*)game->data, game->size);
+   rom_size = CPULoadRomData((const char*)game->data, game->size);
 #endif
 
+   if (!rom_size)
+      return false;
+
    gba_init();
+   set_memory_maps();
 
-   struct retro_memory_descriptor descs[7];
-   struct retro_memory_map mmaps;
-
-   memset(descs, 0, sizeof(descs));
-
-   /* Map internal working RAM */
-   descs[0].ptr    = internalRAM;
-   descs[0].start  = 0x03000000;
-   descs[0].len    = 0x00008000;
-   descs[0].select = 0xFF000000;
-
-   /* Map working RAM */
-   descs[1].ptr    = workRAM;
-   descs[1].start  = 0x02000000;
-   descs[1].len    = 0x00040000;
-   descs[1].select = 0xFF000000;
-
-   /* Map save RAM */
-   descs[2].ptr    = libretro_save_buf;
-   descs[2].start  = 0x0E000000;
-   descs[2].len    = libretro_save_size;
-
-   /* Map VRAM */
-   descs[3].ptr    = vram;
-   descs[3].start  = 0x06000000;
-   descs[3].len    = 0x00018000;
-   descs[3].select = 0xFF000000;
-
-   /* Map palette RAM */
-   descs[4].ptr    = paletteRAM;
-   descs[4].start  = 0x05000000;
-   descs[4].len    = 0x00000400;
-   descs[4].select = 0xFF000000;
-
-   /* Map OAM */
-   descs[5].ptr    = oam;
-   descs[5].start  = 0x07000000;
-   descs[5].len    = 0x00000400;
-   descs[5].select = 0xFF000000;
-
-   /* Map mmapped I/O */
-   descs[6].ptr    = ioMem;
-   descs[6].start  = 0x04000000;
-   descs[6].len    = 0x00000400;
-
-   mmaps.descriptors = descs;
-   mmaps.num_descriptors = sizeof(descs) / sizeof(descs[0]);
-
-   bool yes = true;
-   environ_cb(RETRO_ENVIRONMENT_SET_MEMORY_MAPS, &mmaps);
-   environ_cb(RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS, &yes);
-
-   return ret;
+   return true;
 }
 
 bool retro_load_game_special(
