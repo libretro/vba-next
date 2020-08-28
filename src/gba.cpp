@@ -786,6 +786,11 @@ static int timer3Ticks = 0;
 static int timer3Reload = 0;
 static int timer3ClockReload  = 0;
 
+int cpuDmaCount = 0;
+static uint32_t cpuDmaLast = 0;
+static uint32_t cpuDmaPC = 0;
+static bool cpuDmaRunning = false;
+
 static const uint32_t  objTilesAddress [3] = {0x010000, 0x014000, 0x014000};
 
 static uint8_t* CPUDecodeAddress(uint32_t address) {
@@ -932,10 +937,14 @@ static INLINE u32 CPUReadMemory(u32 address)
             break;
 		default:
 unreadable:
-			if (armState)
-            	value = CPUReadMemoryQuick(bus.reg[15].I);
-            else
-            	value = CPUReadHalfWordQuick(bus.reg[15].I) | CPUReadHalfWordQuick(bus.reg[15].I) << 16;
+			if (cpuDmaRunning || ((bus.reg[15].I - cpuDmaPC) == (armState ? 4 : 2))) {
+				value = cpuDmaLast;
+			} else {
+				if (armState)
+					value = CPUReadMemoryQuick(bus.reg[15].I);
+				else
+					value = CPUReadHalfWordQuick(bus.reg[15].I) | CPUReadHalfWordQuick(bus.reg[15].I) << 16;
+			}
 	}
 
 	if(address & 3) {
@@ -1030,11 +1039,14 @@ static INLINE u32 CPUReadHalfWord(u32 address)
          value =  eepromRead();
          break;
 		case 14:
+		case 15:
          value = flashRead(address) * 0x0101;
          break;
 		default:
 unreadable:
-			{
+			if (cpuDmaRunning || ((bus.reg[15].I - cpuDmaPC) == (armState ? 4 : 2))) {
+				value = cpuDmaLast & 0xFFFF;
+			} else {
 				int param = bus.reg[15].I;
 				if(armState)
 					param += (address & 2);
@@ -1098,6 +1110,7 @@ static INLINE u8 CPUReadByte(u32 address)
 		case 13:
          	return eepromRead();
 		case 14:
+		case 15:
 #ifdef USE_MOTION_SENSOR
 		if(hardware.sensor)
         {
@@ -1117,10 +1130,14 @@ static INLINE u8 CPUReadByte(u32 address)
          	return flashRead(address);
 		default:
 unreadable:
-			if(armState)
-				return CPUReadByteQuick(bus.reg[15].I+(address & 3));
-			else
-				return CPUReadByteQuick(bus.reg[15].I+(address & 1));
+			if (cpuDmaRunning || ((bus.reg[15].I - cpuDmaPC) == (armState ? 4 : 2))) {
+				return cpuDmaLast & 0xFF;
+			} else {
+				if(armState)
+					return CPUReadByteQuick(bus.reg[15].I+(address & 3));
+				else
+					return CPUReadByteQuick(bus.reg[15].I+(address & 1));
+			}
 	}
 }
 
@@ -1164,6 +1181,7 @@ static INLINE void CPUWriteMemory(u32 address, u32 value)
 			}
 			break;
 		case 0x0E:
+		case 0x0F:
 			if((!eepromInUse) | cpuSramEnabled | cpuFlashEnabled)
 				(*cpuSaveGameFunc)(address, (u8)value);
 			break;
@@ -1220,6 +1238,7 @@ static INLINE void CPUWriteHalfWord(u32 address, u16 value)
 				eepromWrite((u8)value);
 			break;
 		case 14:
+		case 15:
 			if((!eepromInUse) | cpuSramEnabled | cpuFlashEnabled)
 				(*cpuSaveGameFunc)(address, (u8)value);
 			break;
@@ -1335,6 +1354,7 @@ static INLINE void CPUWriteByte(u32 address, u8 b)
 				eepromWrite(b);
 			break;
 		case 14:
+		case 15:
 			if ((saveType != 5) && ((!eepromInUse) | cpuSramEnabled | cpuFlashEnabled))
 			{
 				(*cpuSaveGameFunc)(address, b);
@@ -8458,8 +8478,6 @@ bool enableRtc = false;
 bool mirroringEnable = false;
 bool skipSaveGameBattery = false;
 
-int cpuDmaCount = 0;
-
 #ifdef USE_SWITICKS
 int SWITicks = 0;
 #endif
@@ -11799,7 +11817,10 @@ void doDMA(uint32_t &s, uint32_t &d, uint32_t si, uint32_t di, uint32_t c, int t
 	int dw = 0;
 	int sc = c;
 
+	cpuDmaRunning = true;
+	cpuDmaPC = bus.reg[15].I;
 	cpuDmaCount = c;
+
 	// This is done to get the correct waitstates.
 	int32_t sm_gt_15_mask = ((sm>15) | -(sm>15)) >> 31;
 	int32_t dm_gt_15_mask = ((dm>15) | -(dm>15)) >> 31;
@@ -11814,21 +11835,23 @@ void doDMA(uint32_t &s, uint32_t &d, uint32_t si, uint32_t di, uint32_t c, int t
 		s &= 0xFFFFFFFC;
 		if(s < 0x02000000 && (bus.reg[15].I >> 24))
 		{
-			do
+			while(c != 0)
 			{
 				CPUWriteMemory(d, 0);
 				d += di;
 				c--;
-			}while(c != 0);
+			};
 		}
 		else
 		{
-			do {
+			while(c != 0)
+			{
+				cpuDmaLast = CPUReadMemory(s);
 				CPUWriteMemory(d, CPUReadMemory(s));
 				d += di;
 				s += si;
 				c--;
-			}while(c != 0);
+			};
 		}
 	}
 	else
@@ -11838,24 +11861,29 @@ void doDMA(uint32_t &s, uint32_t &d, uint32_t si, uint32_t di, uint32_t c, int t
 		di = (int)di >> 1;
 		if(s < 0x02000000 && (bus.reg[15].I >> 24))
 		{
-			do {
+			while(c != 0)
+			{
 				CPUWriteHalfWord(d, 0);
 				d += di;
 				c--;
-			}while(c != 0);
+			};
 		}
 		else
 		{
-			do{
-				CPUWriteHalfWord(d, CPUReadHalfWord(s));
+			while(c != 0)
+			{
+				cpuDmaLast = CPUReadHalfWord(s);
+				CPUWriteHalfWord(d, cpuDmaLast);
+				cpuDmaLast |= cpuDmaLast << 16;
 				d += di;
 				s += si;
 				c--;
-			}while(c != 0);
+			};
 		}
 	}
 
 	cpuDmaCount = 0;
+	cpuDmaRunning = false;
 
 	if(transfer32)
 	{
@@ -12907,6 +12935,9 @@ void CPUReset (void)
 #ifdef USE_SWITICKS
 	SWITicks = 0;
 #endif
+
+	cpuDmaLast = 0;
+	cpuDmaRunning = false;
 }
 
 static void CPUInterrupt(void)

@@ -83,6 +83,41 @@ struct retro_core_option_definition option_defs_us[] = {
       "0"
    },
 #endif
+   {
+        "vbanext_turboenable",
+        "Enable Turbo Buttons",
+        "Enable or disable gamepad turbo buttons.",
+        {
+            { "disabled", NULL },
+            { "enabled",  NULL },
+            { NULL, NULL },
+        },
+        "disabled"
+    },
+    {
+        "vbanext_turbodelay",
+        "Turbo Delay in frames",
+        "Repeat rate of turbo triggers in frames. Higher value triggers more.",
+        {
+            { "1",  NULL },
+            { "2",  NULL },
+            { "3",  NULL },
+            { "4",  NULL },
+            { "5",  NULL },
+            { "6",  NULL },
+            { "7",  NULL },
+            { "8",  NULL },
+            { "9",  NULL },
+            { "10", NULL },
+            { "11", NULL },
+            { "12", NULL },
+            { "13", NULL },
+            { "14", NULL },
+            { "15", NULL },
+            { NULL, NULL },
+        },
+        "2"
+    },
    { NULL, NULL, NULL, {{0}}, NULL },
 };
 

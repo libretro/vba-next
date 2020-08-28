@@ -24,14 +24,10 @@ static retro_input_state_t input_cb;
 static retro_audio_sample_batch_t audio_batch_cb;
 static retro_environment_t environ_cb;
 
-extern uint64_t joy;
 static bool can_dupe;
-unsigned device_type = 0;
-
 char filename_bios[0x100] = {0};
 
 uint8_t libretro_save_buf[0x20000 + 0x2000];	/* Workaround for broken-by-design GBA save semantics. */
-
 static unsigned libretro_save_size = sizeof(libretro_save_buf);
 
 void *retro_get_memory_data(unsigned id)
@@ -486,7 +482,13 @@ void retro_reset(void)
    CPUReset();
 }
 
-static const unsigned binds[] = {
+#define MAX_BUTTONS 10
+#define TURBO_BUTTONS 2
+static bool option_turboEnable;
+static u32 option_turboDelay;
+static u32 turbo_delay_counter;
+
+static const unsigned binds[MAX_BUTTONS] = {
 	RETRO_DEVICE_ID_JOYPAD_A,
 	RETRO_DEVICE_ID_JOYPAD_B,
 	RETRO_DEVICE_ID_JOYPAD_SELECT,
@@ -499,26 +501,69 @@ static const unsigned binds[] = {
 	RETRO_DEVICE_ID_JOYPAD_L
 };
 
-static const unsigned binds2[] = {
-	RETRO_DEVICE_ID_JOYPAD_B,
-	RETRO_DEVICE_ID_JOYPAD_A,
-	RETRO_DEVICE_ID_JOYPAD_SELECT,
-	RETRO_DEVICE_ID_JOYPAD_START,
-	RETRO_DEVICE_ID_JOYPAD_RIGHT,
-	RETRO_DEVICE_ID_JOYPAD_LEFT,
-	RETRO_DEVICE_ID_JOYPAD_UP,
-	RETRO_DEVICE_ID_JOYPAD_DOWN,
-	RETRO_DEVICE_ID_JOYPAD_R,
-	RETRO_DEVICE_ID_JOYPAD_L
+static const unsigned turbo_binds[TURBO_BUTTONS] = {
+    RETRO_DEVICE_ID_JOYPAD_X,
+    RETRO_DEVICE_ID_JOYPAD_Y
 };
 
 static unsigned has_frame;
 
 static void update_variables(void)
 {
+   struct retro_variable var = { 0 };
 #if USE_FRAME_SKIP
    SetFrameskip(get_frameskip_code());
 #endif
+   var.key = "vbanext_turboenable";
+
+    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value) {
+        option_turboEnable = (!strcmp(var.value, "enabled")) ? true : false;
+    }
+
+    var.key = "vbanext_turbodelay";
+
+    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value) {
+        option_turboDelay = atoi(var.value);
+    }
+}
+
+static void update_input(void)
+{
+   // Reset input states
+   u32 J = 0;
+
+   /* if (retropad_device[0] == RETRO_DEVICE_JOYPAD) */ {
+      for (unsigned button = 0; button < MAX_BUTTONS; button++)
+         J |= input_cb(0, RETRO_DEVICE_JOYPAD, 0, binds[button]) << button;
+
+      if (option_turboEnable) {
+         /* Handle Turbo A & B buttons */
+         bool button_pressed = false;
+         for (unsigned tbutton = 0; tbutton < TURBO_BUTTONS; tbutton++) {
+            if (input_cb(0, RETRO_DEVICE_JOYPAD, 0, turbo_binds[tbutton])) {
+               button_pressed = true;
+               if (!turbo_delay_counter)
+                  J |= 1 << tbutton;
+            }
+         }
+         if (button_pressed) {
+            turbo_delay_counter++;
+            if (turbo_delay_counter > option_turboDelay)
+               /* Reset the toggle if delay value is reached */
+               turbo_delay_counter = 0;
+         }
+         else
+            /* If the button is not pressed, just reset the toggle */
+            turbo_delay_counter = 0;
+      }
+      // Do not allow opposing directions
+      if ((J & 0x30) == 0x30)
+         J &= ~(0x30);
+      else if ((J & 0xC0) == 0xC0)
+         J &= ~(0xC0);
+   }
+
+   joy = J;
 }
 
 void retro_run(void)
@@ -528,27 +573,7 @@ void retro_run(void)
       update_variables();
 
    poll_cb();
-
-   u32 J = 0;
-
-   for (unsigned i = 0; i < 10; i++)
-   {
-      unsigned button = device_type ? binds2[i] : binds[i];
-
-      if (button == RETRO_DEVICE_ID_JOYPAD_LEFT)
-      {
-         if ((J & (1 << RETRO_DEVICE_ID_JOYPAD_RIGHT)) == RETRO_DEVICE_ID_JOYPAD_RIGHT)
-            continue;
-      }
-      else if (button == RETRO_DEVICE_ID_JOYPAD_RIGHT)
-      {
-         if ((J & (1 << RETRO_DEVICE_ID_JOYPAD_LEFT)) == RETRO_DEVICE_ID_JOYPAD_LEFT)
-            continue;
-      }
-      J |= input_cb(0, RETRO_DEVICE_JOYPAD, 0, button) << i;
-   }
-
-   joy = J;
+   update_input();
 
    has_frame = 0;
    UpdateJoypad();
@@ -635,6 +660,39 @@ void retro_cheat_set(unsigned index, bool enabled, const char *code)
    free(codeLine) ;
 }
 
+static u32 rom_size = 0;
+
+static void set_memory_maps(void)
+{
+   struct retro_memory_descriptor descs[] = {
+      // flags, ptr, offset, start, select, disconnect, len, address space
+      { 0, bios,              0, 0x00000000, 0,          0, 0x4000,     "BIOS" },
+      { 0, workRAM,           0, 0x02000000, 0,          0, 0x40000,    "EWRAM" },
+      { 0, internalRAM,       0, 0x03000000, 0,          0, 0x8000,     "IWRAM" },
+      { 0, ioMem,             0, 0x04000000, 0,          0, 0x400,      "IOMEM" },
+      { 0, paletteRAM,        0, 0x05000000, 0,          0, 0x400,      "PALRAM" },
+      { 0, vram,              0, 0x06000000, 0xFFFE8000, 0, 0x18000,    "VRAM" },
+      { 0, oam,               0, 0x07000000, 0,          0, 0x400,      "OAM" },
+      { 0, rom,               0, 0x08000000, 0,          0, rom_size,   "ROM-WS0" },
+      { 0, rom,               0, 0x0A000000, 0,          0, rom_size,   "ROM-WS1" },
+      { 0, rom,               0, 0x0C000000, 0,          0, rom_size,   "ROM-WS2" },
+      // normally, only 64K is accessible at-a-time, 128K flash are bankswitched
+      { 0, libretro_save_buf, 0, 0x0E000000, 0,          0, 0x10000,    "SRAM" }
+      // NOTE: the eeprom can be accessed anywhere from D000000h-DFFFFFFh. The need to map
+      // eeprom pointer to a virtual address might be needed for direct and fixed access when time comes
+      // For VBA Next as well as Beetle GBA, eeprom ptr can be accessed from libretro_save_buf[128 * 1024]
+   };
+
+   struct retro_memory_map mmaps = {
+      descs,
+      sizeof(descs) / sizeof(descs[0])
+   };
+
+   bool yes = true;
+   environ_cb(RETRO_ENVIRONMENT_SET_MEMORY_MAPS, &mmaps);
+   environ_cb(RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS, &yes);
+}
+
 bool retro_load_game(const struct retro_game_info *game)
 {
    update_variables();
@@ -650,73 +708,26 @@ bool retro_load_game(const struct retro_game_info *game)
       { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R,     "R" },
       { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT, "Select" },
       { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START, "Start" },
-
+      { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_Y,     "Turbo B" },
+      { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_X,     "Turbo A" },
       { 0 },
    };
 
    environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, desc);
 
 #ifdef GEKKO
-	bool ret = CPULoadRom(game->path);
+	rom_size = CPULoadRom(game->path);
 #else
-   bool ret = CPULoadRomData((const char*)game->data, game->size);
+   rom_size = CPULoadRomData((const char*)game->data, game->size);
 #endif
 
+   if (!rom_size)
+      return false;
+
    gba_init();
+   set_memory_maps();
 
-   struct retro_memory_descriptor descs[7];
-   struct retro_memory_map mmaps;
-
-   memset(descs, 0, sizeof(descs));
-
-   /* Map internal working RAM */
-   descs[0].ptr    = internalRAM;
-   descs[0].start  = 0x03000000;
-   descs[0].len    = 0x00008000;
-   descs[0].select = 0xFF000000;
-
-   /* Map working RAM */
-   descs[1].ptr    = workRAM;
-   descs[1].start  = 0x02000000;
-   descs[1].len    = 0x00040000;
-   descs[1].select = 0xFF000000;
-
-   /* Map save RAM */
-   descs[2].ptr    = libretro_save_buf;
-   descs[2].start  = 0x0E000000;
-   descs[2].len    = libretro_save_size;
-
-   /* Map VRAM */
-   descs[3].ptr    = vram;
-   descs[3].start  = 0x06000000;
-   descs[3].len    = 0x00018000;
-   descs[3].select = 0xFF000000;
-
-   /* Map palette RAM */
-   descs[4].ptr    = paletteRAM;
-   descs[4].start  = 0x05000000;
-   descs[4].len    = 0x00000400;
-   descs[4].select = 0xFF000000;
-
-   /* Map OAM */
-   descs[5].ptr    = oam;
-   descs[5].start  = 0x07000000;
-   descs[5].len    = 0x00000400;
-   descs[5].select = 0xFF000000;
-
-   /* Map mmapped I/O */
-   descs[6].ptr    = ioMem;
-   descs[6].start  = 0x04000000;
-   descs[6].len    = 0x00000400;
-
-   mmaps.descriptors = descs;
-   mmaps.num_descriptors = sizeof(descs) / sizeof(descs[0]);
-
-   bool yes = true;
-   environ_cb(RETRO_ENVIRONMENT_SET_MEMORY_MAPS, &mmaps);
-   environ_cb(RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS, &yes);
-
-   return ret;
+   return true;
 }
 
 bool retro_load_game_special(
