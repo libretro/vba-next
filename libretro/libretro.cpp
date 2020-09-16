@@ -24,6 +24,8 @@ static retro_input_state_t input_cb;
 static retro_audio_sample_batch_t audio_batch_cb;
 static retro_environment_t environ_cb;
 
+static bool libretro_supports_bitmasks = false;
+
 static bool can_dupe;
 char filename_bios[0x100] = {0};
 
@@ -213,6 +215,9 @@ void retro_init(void)
 #if THREADED_RENDERER
 	ThreadedRendererStart();
 #endif
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_INPUT_BITMASKS, NULL))
+      libretro_supports_bitmasks = true;
 }
 
 static unsigned serialize_size = 0;
@@ -475,6 +480,8 @@ void retro_deinit(void)
 	moncleanup();
 #endif
 	CPUCleanUp();
+
+   libretro_supports_bitmasks = false;
 }
 
 void retro_reset(void)
@@ -531,16 +538,26 @@ static void update_input(void)
 {
    // Reset input states
    u32 J = 0;
+   int16_t joy_bits = 0;
+   unsigned i;
 
    /* if (retropad_device[0] == RETRO_DEVICE_JOYPAD) */ {
+      if (libretro_supports_bitmasks)
+         joy_bits = input_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_MASK);
+      else
+      {
+         for (i = 0; i < MAX_BUTTONS; i++)
+            joy_bits |= input_cb(0, RETRO_DEVICE_JOYPAD, 0, i) ? (1 << i) : 0;
+      }
+
       for (unsigned button = 0; button < MAX_BUTTONS; button++)
-         J |= input_cb(0, RETRO_DEVICE_JOYPAD, 0, binds[button]) << button;
+         J |= joy_bits & (1 << binds[button]) ? (1 << button) : 0;
 
       if (option_turboEnable) {
          /* Handle Turbo A & B buttons */
          bool button_pressed = false;
          for (unsigned tbutton = 0; tbutton < TURBO_BUTTONS; tbutton++) {
-            if (input_cb(0, RETRO_DEVICE_JOYPAD, 0, turbo_binds[tbutton])) {
+            if (joy_bits & (1 << turbo_binds[tbutton])) {
                button_pressed = true;
                if (!turbo_delay_counter)
                   J |= 1 << tbutton;
