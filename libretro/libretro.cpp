@@ -546,7 +546,7 @@ static void update_input(void)
          joy_bits = input_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_MASK);
       else
       {
-         for (i = 0; i < MAX_BUTTONS; i++)
+         for (i = 0; i < (RETRO_DEVICE_ID_JOYPAD_R3+1); i++)
             joy_bits |= input_cb(0, RETRO_DEVICE_JOYPAD, 0, i) ? (1 << i) : 0;
       }
 
