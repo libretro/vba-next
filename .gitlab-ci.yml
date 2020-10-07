@@ -1,6 +1,5 @@
 .core-defs:
   variables:
-    JNI_PATH: .
     CORENAME: vba_next
 
 include:
@@ -13,8 +12,6 @@ include:
     file: '/linux-x64.yml'
   - project: 'libretro-infrastructure/ci-templates'
     file: '/windows-x64-mingw.yml'
-  - project: 'libretro-infrastructure/ci-templates'
-    file: '/android-jni.yml'
 
 stages:
   - build-prepare
@@ -36,27 +33,6 @@ libretro-build-windows-x64:
     - .libretro-windows-x64-mingw-make-default
   variables:
     MAKEFILE: Makefile.libretro
-    
-# Android
-android-armeabi-v7a:
-  extends:
-    - .core-defs
-    - .libretro-android-jni-armeabi-v7a
-
-android-arm64-v8a:
-  extends:
-    - .core-defs
-    - .libretro-android-jni-arm64-v8a
-
-android-x86_64:
-  extends:
-    - .core-defs
-    - .libretro-android-jni-x86_64
-    
-android-x86:
-  extends:
-    - .core-defs
-    - .libretro-android-jni-x86
 
 # Static
 libretro-build-libnx-aarch64:
