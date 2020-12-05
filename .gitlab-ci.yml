@@ -37,10 +37,6 @@ include:
   - project: 'libretro-infrastructure/ci-templates'
     file: '/vita-static.yml'
 
-  # Nintendo 3DS
-  - project: 'libretro-infrastructure/ci-templates'
-    file: '/ctr-static.yml'
-
   # Nintendo GameCube
   - project: 'libretro-infrastructure/ci-templates'
     file: '/ngc-static.yml'
@@ -112,12 +108,6 @@ android-x86:
 libretro-build-vita:
   extends:
     - .libretro-vita-static-retroarch-master
-    - .core-defs
-
-# Nintendo 3DS
-libretro-build-ctr:
-  extends:
-    - .libretro-ctr-static-retroarch-master
     - .core-defs
 
 # Nintendo GameCube
