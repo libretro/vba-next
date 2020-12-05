@@ -7,7 +7,7 @@
 # Core definitions
 .core-defs:
   variables:
-    JNI_PATH: libretro/jni
+    JNI_PATH: libretro
     CORENAME: vba_next
     MAKEFILE: Makefile.libretro
 
