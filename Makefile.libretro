@@ -66,20 +66,16 @@ include $(BUILD_DIR)/Makefile.windows_x86_64
 else
 
 ifeq ($(platform),)
-platform = unix
-ifeq ($(shell uname -a),)
-   platform = win
-else ifneq ($(findstring MINGW,$(shell uname -a)),)
-   platform = win
-else ifneq ($(findstring Darwin,$(shell uname -a)),)
-   platform = osx
-   arch = intel
-ifeq ($(shell uname -p),powerpc)
-   arch = ppc
-endif
-else ifneq ($(findstring win,$(shell uname -a)),)
-   platform = win
-endif
+	platform = unix
+	ifeq ($(shell uname -s),)
+		platform = win
+	else ifneq ($(findstring MINGW,$(shell uname -s)),)
+		platform = win
+	else ifneq ($(findstring Darwin,$(shell uname -s)),)
+		platform = osx
+	else ifneq ($(findstring win,$(shell uname -s)),)
+		platform = win
+	endif
 endif
 
 LIBRETRO_DIR := $(CORE_DIR)/libretro
@@ -87,16 +83,21 @@ LIBRETRO_DIR := $(CORE_DIR)/libretro
 # system platform
 system_platform = unix
 ifeq ($(shell uname -a),)
-EXE_EXT = .exe
-   system_platform = win
+	EXE_EXT = .exe
+	system_platform = win
 else ifneq ($(findstring Darwin,$(shell uname -a)),)
-   system_platform = osx
-   arch = intel
+	system_platform = osx
 ifeq ($(shell uname -p),powerpc)
-   arch = ppc
+	arch = ppc
+else
+	ifeq ($(shell uname -p),arm)
+		arch = arm
+	else
+		arch = intel
+	endif
 endif
 else ifneq ($(findstring MINGW,$(shell uname -a)),)
-   system_platform = win
+	system_platform = win
 endif
 
 TARGET_NAME := vba_next
@@ -151,7 +152,6 @@ else ifeq ($(platform), classic_armv7_a7)
 	-fmerge-all-constants -fno-math-errno \
 	-marm -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard
 	CXXFLAGS += $(CFLAGS)
-	CPPFLAGS += $(CFLAGS)
 	ASFLAGS += $(CFLAGS)
 	HAVE_NEON = 1
 	ARCH = arm
@@ -184,7 +184,6 @@ else ifeq ($(platform), classic_armv8_a35)
 	-fmerge-all-constants -fno-math-errno \
 	-marm -mtune=cortex-a35 -mfpu=neon-fp-armv8 -mfloat-abi=hard
 	CXXFLAGS += $(CFLAGS)
-	CPPFLAGS += $(CFLAGS)
 	ASFLAGS += $(CFLAGS)
 	HAVE_NEON = 1
 	ARCH = arm
@@ -209,7 +208,14 @@ endif
 ifeq ($(OSX_LT_MAVERICKS),"YES")
    fpic += -mmacosx-version-min=10.2
 else
-   fpic += -mmacosx-version-min=10.7 -stdlib=libc++
+   ifeq ($(arch),arm)
+	   TARGET_RULE = -target $(LIBRETRO_APPLE_PLATFORM) -isysroot $(LIBRETRO_APPLE_ISYSROOT)
+		CFLAGS   += $(TARGET_RULE)
+		CXXFLAGS += $(TARGET_RULE)
+   else
+   	fpic += -mmacosx-version-min=10.7
+   endif
+	fpic += -stdlib=libc++
 endif
    SHARED := -dynamiclib
 	TILED_RENDERING=1
