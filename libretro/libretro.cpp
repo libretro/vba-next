@@ -195,8 +195,8 @@ void retro_init(void)
 #if HAVE_HLE_BIOS
    const char* dir = NULL;
    if (environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &dir) && dir) {
-      strncpy(filename_bios, dir, sizeof(filename_bios));
-      strncat(filename_bios, "/gba_bios.bin", sizeof(filename_bios));
+      strcpy(filename_bios, dir);
+      strcat(filename_bios, "/gba_bios.bin");
    }
 #endif
 

@@ -91,7 +91,7 @@ ifeq ($(shell uname -p),powerpc)
 	arch = ppc
 else
 	ifeq ($(shell uname -p),arm)
-		arch = arm
+		arch = arm64
 	else
 		arch = intel
 	endif
@@ -209,9 +209,9 @@ ifeq ($(OSX_LT_MAVERICKS),"YES")
    fpic += -mmacosx-version-min=10.2
 else
    ifeq ($(arch),arm)
-	   TARGET_RULE = -target $(LIBRETRO_APPLE_PLATFORM) -isysroot $(LIBRETRO_APPLE_ISYSROOT)
-		CFLAGS   += $(TARGET_RULE)
-		CXXFLAGS += $(TARGET_RULE)
+	TARGET_RULE = -arch arm64
+	CFLAGS   += $(TARGET_RULE)
+	CXXFLAGS += $(TARGET_RULE)
    else
    	fpic += -mmacosx-version-min=10.7
    endif
