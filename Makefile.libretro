@@ -207,18 +207,15 @@ endif
    OSX_LT_MAVERICKS = `(( $(OSXVER) <= 9)) && echo "YES"`
 ifeq ($(OSX_LT_MAVERICKS),"YES")
    fpic += -mmacosx-version-min=10.2
-else
-   ifeq ($(arch),arm)
-	TARGET_RULE = -arch arm64
-	CFLAGS   += $(TARGET_RULE)
-	CXXFLAGS += $(TARGET_RULE)
-   else
-   	fpic += -mmacosx-version-min=10.7
-   endif
-	fpic += -stdlib=libc++
 endif
+   ifeq ($(CROSS_COMPILE),1)
+	TARGET_RULE   = -target $(LIBRETRO_APPLE_PLATFORM) -isysroot $(LIBRETRO_APPLE_ISYSROOT)
+	CFLAGS   += $(TARGET_RULE)
+	LDFLAGS  += $(TARGET_RULE)
+   endif
+   fpic += -stdlib=libc++
    SHARED := -dynamiclib
-	TILED_RENDERING=1
+   TILED_RENDERING=1
 
 # iOS
 else ifneq (,$(findstring ios,$(platform)))
