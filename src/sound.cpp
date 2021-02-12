@@ -92,9 +92,6 @@ class Blip_Synth
 	void offset_inline( int32_t t, int delta, Blip_Buffer* buf ) const {
 		offset_resampled( t * buf->factor_ + buf->offset_, delta, buf );
 	}
-	void offset_inline( int32_t t, int delta ) const {
-		offset_resampled( t * buf->factor_ + buf->offset_, delta, buf );
-	}
 };
 
 class Gb_Osc
@@ -591,7 +588,6 @@ INLINE void Gb_Wave::write_register( int frame_phase, int reg, int old_data, int
 			break;
 
 		case 4:
-			bool was_enabled = enabled;
 			if ( write_trig( frame_phase, 256, old_data ) )
 			{
 				if ( !GB_WAVE_DAC_ENABLED() )

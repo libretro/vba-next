@@ -70,13 +70,7 @@ template<int renderer_idx>
 renderfunc_t GetRenderFunc(int mode, int type);
 
 inline static long max(int p, int q) { return p > q ? p : q; }
-inline static long max(long p, int q) { return p > q ? p : q; }
-inline static long max(int p, long q) { return p > q ? p : q; }
-inline static long max(long p, long q) { return p > q ? p : q; }
 inline static long min(int p, int q) { return p < q ? p : q; }
-inline static long min(long p, int q) { return p < q ? p : q; }
-inline static long min(int p, long q) { return p < q ? p : q; }
-inline static long min(long p, long q) { return p < q ? p : q; }
 
 uint8_t *rom = 0;
 uint8_t *bios = 0;
@@ -789,8 +783,9 @@ static bool cpuDmaRunning = false;
 
 static const uint32_t  objTilesAddress [3] = {0x010000, 0x014000, 0x014000};
 
-static uint8_t* CPUDecodeAddress(uint32_t address) {
-
+#if 0
+static uint8_t* CPUDecodeAddress(uint32_t address)
+{
 	switch(address >> 24) {
 		case 0:
 			/* BIOS */
@@ -859,6 +854,7 @@ unreadable:
 
 	return NULL;
 }
+#endif
 
 static INLINE u32 CPUReadMemory(u32 address)
 {
@@ -7001,6 +6997,7 @@ static inline void gfxDrawTextScreen(u16 control, u16 hofs, u16 vofs)
 
 static u32 map_sizes_rot[] = { 128, 256, 512, 1024 };
 
+#if THREADED_RENDERER
 static INLINE void fetchDrawRotScreen(u16 control, u16 x_l, u16 x_h, u16 y_l, u16 y_h, u16 pa, u16 pb, u16 pc, u16 pd, int& currentX, int& currentY, int changed)
 {
 #ifdef BRANCHLESS_GBA_GFX
@@ -7201,6 +7198,7 @@ static INLINE void fetchDrawRotScreen16Bit160(int& currentX, int& currentY, int 
 			currentY |= 0xF8000000;
 	}
 }
+#endif
 
 template<int layer, int renderer_idx>
 static INLINE void gfxDrawRotScreen(u16 control, u16 x_l, u16 x_h, u16 y_l, u16 y_h,
@@ -11388,9 +11386,8 @@ static void threaded_renderer_loop(void* p) {
 		return;
 	}
 
-	while(renderer_ctx.renderer_control == 1) {
+	while(renderer_ctx.renderer_control == 1)
 		threaded_renderer_loop_impl();
-	}
 
 	renderer_ctx.renderer_control = 0; //loop is terminated.
 }
