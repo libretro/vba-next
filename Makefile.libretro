@@ -242,9 +242,9 @@ endif
    CFLAGS += -DIOS
 
 ifeq ($(platform),$(filter $(platform),ios9 ios-arm64))
-   MINVERSION = miphoneos-version-min=8.0
+   MINVERSION = -miphoneos-version-min=8.0
 else
-   MINVERSION = miphoneos-version-min=5.0
+   MINVERSION = -miphoneos-version-min=5.0
 endif
    CFLAGS   += $(MINVERSION)
    CXXFLAGS += $(MINVERSION)
