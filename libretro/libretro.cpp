@@ -416,6 +416,9 @@ static int get_frameskip_code(void)
 
 static void gba_init(void)
 {
+   struct retro_variable var = { 0 };
+   bool rtc = false;
+ 
    cpuSaveType = 0;
    flashSize = 0x10000;
    enableRtc = false;
@@ -426,8 +429,19 @@ static void gba_init(void)
    if(flashSize == 0x10000 || flashSize == 0x20000)
       flashSetSize(flashSize);
 
-   if(enableRtc)
-      rtcEnable(enableRtc);
+   var.key = "vbanext_rtc";
+   var.value = NULL;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+   {
+      if (strcmp(var.value, "enabled") == 0)
+         rtc = true;
+      else
+         if(enableRtc)
+            rtc = true;  
+   }
+
+   rtcEnable(rtc);
 
    doMirroring(mirroringEnable);
 
@@ -435,8 +449,6 @@ static void gba_init(void)
 
 #if HAVE_HLE_BIOS
    bool usebios = false;
-
-   struct retro_variable var;
 
    var.key = "vbanext_bios";
    var.value = NULL;
