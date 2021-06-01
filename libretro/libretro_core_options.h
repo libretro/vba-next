@@ -65,6 +65,17 @@ struct retro_core_option_definition option_defs_us[] = {
       },
       "enabled"
    },
+   {
+      "vbanext_rtc",
+      "Force Enable RTC",
+      "Forces RTC to be enabled even for unknown roms. This is helpful for romhacks that needs RTC (like pokemon romhacks) without a matched override entry.",
+      {
+         { "auto", NULL },
+         { "enabled", NULL },
+         { NULL, NULL},
+      },
+      "auto"
+   },
 #ifdef USE_FRAME_SKIP
    {
       "vbanext_frameskip",
