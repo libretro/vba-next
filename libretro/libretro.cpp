@@ -222,7 +222,8 @@ void retro_init(void)
 
 static unsigned serialize_size = 0;
 
-typedef struct  {
+typedef struct
+{
 	char romtitle[256];
 	char romid[5];
 	int flashSize;

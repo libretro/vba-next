@@ -8959,54 +8959,62 @@ static bool CPUIsELF(const char *file)
 
 void CPUCleanUp (void)
 {
-	if(rom != NULL) {
-		memalign_free(rom);
-		rom = NULL;
-	}
+   if(rom != NULL)
+   {
+      memalign_free(rom);
+      rom = NULL;
+   }
 
-	if(vram != NULL) {
-		memalign_free(vram);
-		vram = NULL;
-	}
+   if(vram != NULL)
+   {
+      memalign_free(vram);
+      vram = NULL;
+   }
 
-	if(paletteRAM != NULL) {
-		memalign_free(paletteRAM);
-		paletteRAM = NULL;
-	}
+   if(paletteRAM != NULL)
+   {
+      memalign_free(paletteRAM);
+      paletteRAM = NULL;
+   }
 
-	if(internalRAM != NULL) {
-		memalign_free(internalRAM);
-		internalRAM = NULL;
-	}
+   if(internalRAM != NULL)
+   {
+      memalign_free(internalRAM);
+      internalRAM = NULL;
+   }
 
-	if(workRAM != NULL) {
-		memalign_free(workRAM);
-		workRAM = NULL;
-	}
+   if(workRAM != NULL)
+   {
+      memalign_free(workRAM);
+      workRAM = NULL;
+   }
 
-	if(bios != NULL) {
-		memalign_free(bios);
-		bios = NULL;
-	}
+   if(bios != NULL)
+   {
+      memalign_free(bios);
+      bios = NULL;
+   }
 
-	if(pix != NULL) {
-		memalign_free(pix);
-		pix = NULL;
-	}
+   if(pix != NULL)
+   {
+      memalign_free(pix);
+      pix = NULL;
+   }
 
-	if(oam != NULL) {
-		memalign_free(oam);
-		oam = NULL;
-	}
+   if(oam != NULL)
+   {
+      memalign_free(oam);
+      oam = NULL;
+   }
 
-	if(ioMem != NULL) {
-		memalign_free(ioMem);
-		ioMem = NULL;
-	}
-
+   if(ioMem != NULL)
+   {
+      memalign_free(ioMem);
+      ioMem = NULL;
+   }
 }
 
-bool CPUSetupBuffers(void)
+static bool CPUSetupBuffers(void)
 {
 	romSize = 0x2000000;
 	if(rom != NULL)
@@ -9090,21 +9098,22 @@ static void applyCartridgeOverride(char* code) {
 #endif
 }
 
-static int CPULoadRomGeneric(uint8_t *whereToLoad)
+static void CPULoadRomGeneric(uint8_t *whereToLoad)
 {
+	int i;
+   uint16_t *temp;
+
 	//load cartridge code
 	memcpy(cartridgeCode, whereToLoad + 0xAC, 4);
 	applyCartridgeOverride(cartridgeCode);
 
-	uint16_t *temp = (uint16_t *)(rom+((romSize+1)&~1));
-	int i;
+	temp = (uint16_t *)(rom+((romSize+1)&~1));
 
-	for(i = (romSize+1)&~1; i < 0x2000000; i+=2) {
+	for(i = (romSize+1)&~1; i < 0x2000000; i+=2)
+   {
 		WRITE16LE(temp, (i >> 1) & 0xFFFF);
 		temp++;
 	}
-
-	return romSize;
 }
 
 static int utilGetSize(int size)
@@ -9156,10 +9165,12 @@ int CPULoadRomData(const char *data, int size)
 
 	uint8_t *whereToLoad = cpuIsMultiBoot ? workRAM : rom;
 
-	romSize = size % 2 == 0 ? size : size + 1;
+	romSize = (size % 2 == 0) ? size : size + 1;
 	memcpy(whereToLoad, data, size);
 
-   return CPULoadRomGeneric(whereToLoad);
+   CPULoadRomGeneric(whereToLoad);
+
+   return romSize;
 }
 #else
 static bool utilIsGBAImage(const char * file)
@@ -9212,7 +9223,9 @@ int CPULoadRom(const char * file)
       }
 	}
 
-   return CPULoadRomGeneric(whereToLoad);
+   CPULoadRomGeneric(whereToLoad);
+
+   return romSize;
 }
 #endif
 
