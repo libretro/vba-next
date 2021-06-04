@@ -81,7 +81,6 @@ uint8_t *ioMem = 0;
 uint8_t *internalRAM = 0;
 uint8_t *workRAM = 0;
 uint8_t *paletteRAM = 0;
-char cartridgeCode[4];
 
 int renderfunc_mode = 0;
 int renderfunc_type = 0;
@@ -9101,6 +9100,7 @@ static void applyCartridgeOverride(char* code) {
 static void CPULoadRomGeneric(uint8_t *whereToLoad)
 {
 	int i;
+   char cartridgeCode[4];
    uint16_t *temp;
 
 	//load cartridge code
