@@ -100,8 +100,11 @@ extern void (*cpuSaveGameFunc)(uint32_t,uint8_t);
 
 extern bool CPUReadState(const uint8_t * data, unsigned size);
 extern unsigned CPUWriteState(uint8_t* data, unsigned size);
-extern int CPULoadRom(const char *);
+#ifdef LOAD_FROM_MEMORY
 extern int CPULoadRomData(const char *data, int size);
+#else
+extern int CPULoadRom(const char *);
+#endif
 extern void doMirroring(bool);
 extern void CPUUpdateRegister(uint32_t, uint16_t);
 extern void CPUInit(const char *,bool);

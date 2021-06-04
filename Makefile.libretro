@@ -8,6 +8,7 @@ USE_THREADED_RENDERER=0
 USE_MOTION_SENSOR=0
 USE_FRAME_SKIP=0
 HAVE_NEON=0
+LOAD_FROM_MEMORY = 1
 
 SPACE :=
 SPACE := $(SPACE) $(SPACE)
@@ -360,6 +361,7 @@ else ifeq ($(platform), ngc)
    PLATFORM_DEFINES += -U__INT32_TYPE__ -U __UINT32_TYPE__ -D__INT32_TYPE__=int
    STATIC_LINKING = 1
 	TILED_RENDERING=1
+	LOAD_FROM_MEMORY = 0
 
 # Nintendo Wii
 else ifeq ($(platform), wii)
@@ -373,6 +375,7 @@ else ifeq ($(platform), wii)
    PLATFORM_DEFINES += -U__INT32_TYPE__ -U __UINT32_TYPE__ -D__INT32_TYPE__=int
    STATIC_LINKING = 1
 	TILED_RENDERING=1
+	LOAD_FROM_MEMORY = 0
 
 # Nintendo WiiU
 else ifeq ($(platform), wiiu)

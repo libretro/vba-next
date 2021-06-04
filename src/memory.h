@@ -9,15 +9,17 @@
 #define EEPROM_READDATA2      3
 #define EEPROM_WRITEDATA      4
 
-enum {
-	IMAGE_UNKNOWN,
-	IMAGE_GBA
+enum
+{
+   IMAGE_UNKNOWN,
+   IMAGE_GBA
 };
 
 /* save game */
-typedef struct {
-	void *address;
-	int size;
+typedef struct
+{
+   void *address;
+   int size;
 } variable_desc;
 
 extern int flashSize;
@@ -60,9 +62,6 @@ extern void rtcSaveGameMem(uint8_t *& data);
 
 extern u16 gyroRead(u32 address);
 extern bool gyroWrite(u32 address, u16 value);
-
-bool utilIsGBAImage(const char *);
-uint8_t *utilLoad(const char *, bool (*)(const char*), uint8_t *, int &);
 
 void utilWriteIntMem(uint8_t *& data, int);
 void utilWriteMem(uint8_t *& data, const void *in_data, unsigned size);

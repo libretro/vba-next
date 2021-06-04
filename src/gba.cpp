@@ -9107,6 +9107,89 @@ static int CPULoadRomGeneric(uint8_t *whereToLoad)
 	return romSize;
 }
 
+static int utilGetSize(int size)
+{
+   int res = 1;
+
+   while(res < size)
+      res <<= 1;
+
+   return res;
+}
+
+static uint8_t *utilLoad(const char *file,
+      bool (*accept)(const char *), uint8_t *data, int &size)
+{
+   uint8_t *image = NULL;
+   FILE *fp       = fopen(file,"rb");
+   if (!fp)
+      return NULL;
+
+   fseek(fp, 0, SEEK_END); /*go to end*/
+   size = ftell(fp); /* get position at end (length)*/
+   rewind(fp);
+
+   image = data;
+
+   if(image == NULL)
+   {
+      /*allocate buffer memory if none was passed to the function*/
+      image = (uint8_t *)malloc(utilGetSize(size));
+      if(image == NULL)
+      {
+         systemMessage("Failed to allocate memory for data");
+         return NULL;
+      }
+   }
+
+   fread(image, 1, size, fp); /* read into buffer*/
+   fclose(fp);
+   return image;
+}
+
+
+#ifdef LOAD_FROM_MEMORY
+int CPULoadRomData(const char *data, int size)
+{
+	if (!CPUSetupBuffers())
+      return 0;
+
+	uint8_t *whereToLoad = cpuIsMultiBoot ? workRAM : rom;
+
+	romSize = size % 2 == 0 ? size : size + 1;
+	memcpy(whereToLoad, data, size);
+
+   return CPULoadRomGeneric(whereToLoad);
+}
+#else
+static bool utilIsGBAImage(const char * file)
+{
+	cpuIsMultiBoot = false;
+	if(strlen(file) > 4)
+	{
+		const char * p = strrchr(file,'.');
+
+		if(p != NULL)
+      {
+         if(
+               !strcasecmp(p, ".agb") ||
+               !strcasecmp(p, ".gba") ||
+               !strcasecmp(p, ".bin") ||
+               !strcasecmp(p, ".elf")
+           )
+            return true;
+
+         if(!strcasecmp(p, ".mb"))
+         {
+            cpuIsMultiBoot = true;
+            return true;
+         }
+      }
+	}
+
+	return false;
+}
+
 int CPULoadRom(const char * file)
 {
 	if (!CPUSetupBuffers())
@@ -9131,19 +9214,7 @@ int CPULoadRom(const char * file)
 
    return CPULoadRomGeneric(whereToLoad);
 }
-
-int CPULoadRomData(const char *data, int size)
-{
-	if (!CPUSetupBuffers())
-      return 0;
-
-	uint8_t *whereToLoad = cpuIsMultiBoot ? workRAM : rom;
-
-	romSize = size % 2 == 0 ? size : size + 1;
-	memcpy(whereToLoad, data, size);
-
-   return CPULoadRomGeneric(whereToLoad);
-}
+#endif
 
 void doMirroring (bool b)
 {

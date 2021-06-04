@@ -7,6 +7,7 @@ SOURCES_ASM :=
 
 FRONTEND_SUPPORTS_RGB565 := 1
 TILED_RENDERING          := 1
+LOAD_FROM_MEMORY         := 1
 
 include $(CORE_DIR)/build/Makefile.common
 
