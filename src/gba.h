@@ -98,8 +98,6 @@ extern uint64_t joy;
 
 extern void (*cpuSaveGameFunc)(uint32_t,uint8_t);
 
-extern bool CPUWriteBatteryFile(const char *);
-extern bool CPUReadBatteryFile(const char *);
 extern bool CPUReadState(const uint8_t * data, unsigned size);
 extern unsigned CPUWriteState(uint8_t* data, unsigned size);
 extern int CPULoadRom(const char *);
@@ -117,8 +115,8 @@ extern void SetFrameskip(int);
 #endif
 
 #if THREADED_RENDERER
-extern void ThreadedRendererStart();
-extern void ThreadedRendererStop();
+extern void ThreadedRendererStart(void);
+extern void ThreadedRendererStop(void);
 #endif
 
 #if USE_MOTION_SENSOR

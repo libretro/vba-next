@@ -8881,7 +8881,6 @@ static INLINE int CPUUpdateTicks (void)
           graphics.layerEnable = io_registers[REG_DISPCNT]; \
   }
 
-
 unsigned CPUWriteState(uint8_t* data, unsigned size)
 {
 	uint8_t *orig = data;
@@ -8910,94 +8909,6 @@ unsigned CPUWriteState(uint8_t* data, unsigned size)
 	rtcSaveGameMem(data);
 
 	return (ptrdiff_t)data - (ptrdiff_t)orig;
-}
-
-bool CPUWriteBatteryFile(const char *fileName)
-{
-	if(gbaSaveType == 0)
-	{
-		if(eepromInUse)
-			gbaSaveType = 3;
-		else
-			switch(saveType)
-			{
-				case 1:
-					gbaSaveType = 1;
-					break;
-				case 2:
-					gbaSaveType = 2;
-					break;
-			}
-	}
-
-	if((gbaSaveType) && (gbaSaveType!=5))
-	{
-		FILE *file = fopen(fileName, "wb");
-
-		if(!file) {
-			systemMessage("Error creating file %s", fileName);
-			return false;
-		}
-
-		// only save if Flash/Sram in use or EEprom in use
-		if(gbaSaveType != 3) {
-			if(gbaSaveType == 2) {
-				if(fwrite(flashSaveMemory, 1, flashSize, file) != (size_t)flashSize) {
-					fclose(file);
-					return false;
-				}
-			} else {
-				if(fwrite(flashSaveMemory, 1, 0x10000, file) != 0x10000) {
-					fclose(file);
-					return false;
-				}
-			}
-		} else {
-			if(fwrite(eepromData, 1, eepromSize, file) != (size_t)eepromSize) {
-				fclose(file);
-				return false;
-			}
-		}
-		fclose(file);
-	}
-	return true;
-}
-
-bool CPUReadBatteryFile(const char *fileName)
-{
-	FILE *file = fopen(fileName, "rb");
-
-	if(!file)
-		return false;
-
-	// check file size to know what we should read
-	fseek(file, 0, SEEK_END);
-
-	long size = ftell(file);
-	fseek(file, 0, SEEK_SET);
-
-	if(size == 512 || size == 0x2000) {
-		if(fread(eepromData, 1, size, file) != (size_t)size) {
-			fclose(file);
-			return false;
-		}
-	} else {
-		if(size == 0x20000) {
-			if(fread(flashSaveMemory, 1, 0x20000, file) != 0x20000) {
-				fclose(file);
-				return false;
-			}
-			flashSetSize(0x20000);
-		} else {
-			if(fread(flashSaveMemory, 1, 0x10000, file) != 0x10000) {
-				fclose(file);
-				return false;
-			}
-			flashSetSize(0x10000);
-		}
-	}
-	fclose(file);
-	return true;
 }
 
 #ifdef HAVE_HLE_BIOS
@@ -9095,7 +9006,7 @@ void CPUCleanUp (void)
 
 }
 
-bool CPUSetupBuffers()
+bool CPUSetupBuffers(void)
 {
 	romSize = 0x2000000;
 	if(rom != NULL)
@@ -9179,26 +9090,8 @@ static void applyCartridgeOverride(char* code) {
 #endif
 }
 
-int CPULoadRom(const char * file)
+static int CPULoadRomGeneric(uint8_t *whereToLoad)
 {
-	if (!CPUSetupBuffers()) return 0;
-
-	uint8_t *whereToLoad = cpuIsMultiBoot ? workRAM : rom;
-
-	if(file != NULL)
-	{
-		if(!utilLoad(file,
-					utilIsGBAImage,
-					whereToLoad,
-					romSize)) {
-			memalign_free(rom);
-			rom = NULL;
-			memalign_free(workRAM);
-			workRAM = NULL;
-			return 0;
-		}
-	}
-
 	//load cartridge code
 	memcpy(cartridgeCode, whereToLoad + 0xAC, 4);
 	applyCartridgeOverride(cartridgeCode);
@@ -9214,28 +9107,42 @@ int CPULoadRom(const char * file)
 	return romSize;
 }
 
+int CPULoadRom(const char * file)
+{
+	if (!CPUSetupBuffers())
+      return 0;
+
+	uint8_t *whereToLoad = cpuIsMultiBoot ? workRAM : rom;
+
+	if (file != NULL)
+	{
+		if(!utilLoad(file,
+					utilIsGBAImage,
+					whereToLoad,
+					romSize))
+      {
+         memalign_free(rom);
+         rom = NULL;
+         memalign_free(workRAM);
+         workRAM = NULL;
+         return 0;
+      }
+	}
+
+   return CPULoadRomGeneric(whereToLoad);
+}
+
 int CPULoadRomData(const char *data, int size)
 {
-	if (!CPUSetupBuffers()) return 0;
+	if (!CPUSetupBuffers())
+      return 0;
 
 	uint8_t *whereToLoad = cpuIsMultiBoot ? workRAM : rom;
 
 	romSize = size % 2 == 0 ? size : size + 1;
 	memcpy(whereToLoad, data, size);
 
-	//load cartridge code
-	memcpy(cartridgeCode, whereToLoad + 0xAC, 4);
-	applyCartridgeOverride(cartridgeCode);
-
-	uint16_t *temp = (u16 *)(rom+((romSize+1)&~1));
-	int i;
-
-	for(i = (romSize+1)&~1; i < 0x2000000; i+=2) {
-		WRITE16LE(temp, (i >> 1) & 0xFFFF);
-		temp++;
-	}
-
-	return romSize;
+   return CPULoadRomGeneric(whereToLoad);
 }
 
 void doMirroring (bool b)
@@ -12530,9 +12437,7 @@ void CPUInit(const char *biosFileName, bool useBiosFile)
 				useBios = true;
 		}
 	}
-#endif
 
-#ifdef HAVE_HLE_BIOS
 	if(!useBios)
 #endif
 		memcpy(bios, myROM, sizeof(myROM));
