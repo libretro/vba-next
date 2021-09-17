@@ -6,6 +6,8 @@
 #include <memalign.h>
 #include <time.h>
 
+#include <streams/file_stream.h>
+
 #include "system.h"
 #include "globals.h"
 
@@ -9130,13 +9132,14 @@ static uint8_t *utilLoad(const char *file,
       bool (*accept)(const char *), uint8_t *data, int &size)
 {
    uint8_t *image = NULL;
-   FILE *fp       = fopen(file,"rb");
+   RFILE *fp       = filestream_open(file, RETRO_VFS_FILE_ACCESS_READ,
+         RETRO_VFS_FILE_ACCESS_HINT_NONE);
    if (!fp)
       return NULL;
 
-   fseek(fp, 0, SEEK_END); /*go to end*/
-   size = ftell(fp); /* get position at end (length)*/
-   rewind(fp);
+   filestream_seek(fp, 0, SEEK_END); /*go to end*/
+   size = filestream_tell(fp); /* get position at end (length)*/
+   filestream_rewind(fp);
 
    image = data;
 
@@ -9147,12 +9150,13 @@ static uint8_t *utilLoad(const char *file,
       if(image == NULL)
       {
          systemMessage("Failed to allocate memory for data");
+         filestream_close(fp);
          return NULL;
       }
    }
 
-   fread(image, 1, size, fp); /* read into buffer*/
-   fclose(fp);
+   filestream_read(fp, image, size); /* read into buffer*/
+   filestream_close(fp);
    return image;
 }
 

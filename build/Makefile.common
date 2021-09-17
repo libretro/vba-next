@@ -51,7 +51,6 @@ ifneq ($(STATIC_LINKING),1)
 SOURCES_C += $(LIBRETRO_COMM_DIR)/memalign.c
 OBJECTS_COND += $(LIBRETRO_COMM_DIR)/memalign.o
 
-ifneq ($(LOAD_FROM_MEMORY),1)
 SOURCES_C += 	\
 		$(LIBRETRO_COMM_DIR)/compat/compat_posix_string.c \
 		$(LIBRETRO_COMM_DIR)/compat/compat_strcasestr.c \
@@ -76,7 +75,6 @@ OBJECTS_COND +=	\
 		$(LIBRETRO_COMM_DIR)/string/stdstring.o \
 		$(LIBRETRO_COMM_DIR)/time/rtime.o \
 		$(LIBRETRO_COMM_DIR)/vfs/vfs_implementation.o
-endif
 endif
 
 ifeq ($(USE_THREADED_RENDERER), 1)
