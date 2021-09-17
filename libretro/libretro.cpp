@@ -139,9 +139,20 @@ void retro_set_controller_port_device(unsigned port, unsigned device)
 
 void retro_set_environment(retro_environment_t cb)
 {
+#ifndef LOAD_FROM_MEMORY
+   struct retro_vfs_interface_info vfs_iface_info;
+#endif
+
    environ_cb = cb;
 
    libretro_set_core_options(environ_cb);
+
+#ifndef LOAD_FROM_MEMORY
+	vfs_iface_info.required_interface_version = 1;
+	vfs_iface_info.iface                      = NULL;
+	if (environ_cb(RETRO_ENVIRONMENT_GET_VFS_INTERFACE, &vfs_iface_info))
+		filestream_vfs_init(&vfs_iface_info);
+#endif
 }
 
 void retro_get_system_info(struct retro_system_info *info)
