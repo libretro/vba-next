@@ -18,13 +18,10 @@ void cheatsAdd(const char *codeStr, const char *desc, uint32_t rawaddress, uint3
 void cheatsAddCheatCode(const char *code, const char *desc);
 void cheatsAddGSACode(const char *code, const char *desc, bool v3);
 void cheatsAddCBACode(const char *code, const char *desc);
-bool cheatsImportGSACodeFile(const char *name, int game, bool v3);
 void cheatsDelete(int number, bool restore);
 void cheatsDeleteAll(bool restore);
 void cheatsEnable(int number);
 void cheatsDisable(int number);
-void cheatsSaveCheatList(const char *file);
-bool cheatsLoadCheatList(const char *file);
 void cheatsWriteMemory(uint32_t address, uint32_t value);
 void cheatsWriteHalfWord(uint32_t address, uint16_t value);
 void cheatsWriteByte(uint32_t address, uint8_t value);

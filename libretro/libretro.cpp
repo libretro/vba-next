@@ -748,7 +748,7 @@ bool retro_load_game(const struct retro_game_info *game)
 #ifdef LOAD_FROM_MEMORY
    rom_size = CPULoadRomData((const char*)game->data, game->size);
 #else
-	rom_size = CPULoadRom(game->path);
+   rom_size = CPULoadRom(game->path);
 #endif
 
    if (!rom_size)

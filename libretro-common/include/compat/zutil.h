@@ -109,8 +109,6 @@ extern char z_errmsg[10][21]; /* indexed by 2-zlib_error */
 
 #if defined(VAXC) || defined(VMS)
 #  define OS_CODE  0x02
-#  define F_OPEN(name, mode) \
-     fopen((name), (mode), "mbc=60", "ctx=stm", "rfm=fix", "mrs=512")
 #endif
 
 #if defined(ATARI) || defined(atarist)
@@ -184,10 +182,6 @@ extern char z_errmsg[10][21]; /* indexed by 2-zlib_error */
 
 #ifndef OS_CODE
 #  define OS_CODE  0x03  /* assume Unix */
-#endif
-
-#ifndef F_OPEN
-#  define F_OPEN(name, mode) fopen((name), (mode))
 #endif
 
          /* functions */
