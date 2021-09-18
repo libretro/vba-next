@@ -9143,11 +9143,10 @@ static uint8_t *utilLoad(const char *file,
 
    image = data;
 
-   if(image == NULL)
+   if(!image)
    {
       /*allocate buffer memory if none was passed to the function*/
-      image = (uint8_t *)malloc(utilGetSize(size));
-      if(image == NULL)
+      if (!(image = (uint8_t *)malloc(utilGetSize(size))))
       {
          systemMessage("Failed to allocate memory for data");
          filestream_close(fp);
@@ -9164,12 +9163,13 @@ static uint8_t *utilLoad(const char *file,
 #ifdef LOAD_FROM_MEMORY
 int CPULoadRomData(const char *data, int size)
 {
+   uint8_t *whereToLoad;
 	if (!CPUSetupBuffers())
       return 0;
 
-	uint8_t *whereToLoad = cpuIsMultiBoot ? workRAM : rom;
+	whereToLoad = cpuIsMultiBoot  ? workRAM : rom;
+	romSize     = (size % 2 == 0) ? size    : size + 1;
 
-	romSize = (size % 2 == 0) ? size : size + 1;
 	memcpy(whereToLoad, data, size);
 
    CPULoadRomGeneric(whereToLoad);
@@ -9207,12 +9207,13 @@ static bool utilIsGBAImage(const char * file)
 
 int CPULoadRom(const char * file)
 {
+	uint8_t *whereToLoad = NULL;
 	if (!CPUSetupBuffers())
       return 0;
 
-	uint8_t *whereToLoad = cpuIsMultiBoot ? workRAM : rom;
+	whereToLoad = cpuIsMultiBoot ? workRAM : rom;
 
-	if (file != NULL)
+	if (file)
 	{
 		if(!utilLoad(file,
 					utilIsGBAImage,
@@ -9251,29 +9252,35 @@ void doMirroring (bool b)
 }
 
 #if THREADED_RENDERER
-void ThreadedRendererStart() {
-	for(int u = 0; u < THREADED_RENDERER_COUNT; ++u) {
-		init_renderer_context(threaded_renderer_contexts[u]);
-		threaded_renderer_contexts[u].renderer_control = 1;
+void ThreadedRendererStart(void)
+{
+   int u;
+	for(u = 0; u < THREADED_RENDERER_COUNT; ++u)
+   {
+      init_renderer_context(threaded_renderer_contexts[u]);
+      threaded_renderer_contexts[u].renderer_control = 1;
 
-		threaded_renderer_contexts[u].renderer_thread_id =
-			thread_run((u == 0) ? threaded_renderer_loop0 : threaded_renderer_loop, reinterpret_cast<void*>(intptr_t(u)),
+      threaded_renderer_contexts[u].renderer_thread_id =
+         thread_run((u == 0) ? threaded_renderer_loop0 : threaded_renderer_loop, reinterpret_cast<void*>(intptr_t(u)),
 #if VITA
-				(u == 0) ? THREAD_PRIORITY_NORMAL : THREAD_PRIORITY_LOW);
+               (u == 0) ? THREAD_PRIORITY_NORMAL : THREAD_PRIORITY_LOW);
 #else
-				THREAD_PRIORITY_NORMAL);
+      THREAD_PRIORITY_NORMAL);
 #endif
-	}
+   }
 }
 
-void ThreadedRendererStop() {
-	for(int u = 0; u < THREADED_RENDERER_COUNT; ++u) {
+void ThreadedRendererStop(void)
+{
+   int u;
+	for(u = 0; u < THREADED_RENDERER_COUNT; ++u)
 		threaded_renderer_contexts[u].renderer_control = 2;
-	}
 _join:;
-	for(int u = 0; u < THREADED_RENDERER_COUNT; ++u) {
-		if(threaded_renderer_contexts[u].renderer_control == 2) goto _join;
-	}
+	for(u = 0; u < THREADED_RENDERER_COUNT; ++u)
+   {
+      if(threaded_renderer_contexts[u].renderer_control == 2)
+         goto _join;
+   }
 }
 #endif
 
@@ -9318,60 +9325,78 @@ static void mode0RenderLine (void)
 	for(int x = 0; x < 240; x++)
 	{
 		uint32_t color = backdrop;
-		uint8_t top = SpecialEffectTarget_BD;
+		uint8_t top    = SpecialEffectTarget_BD;
 
-		if(RENDERER_LINE[Layer_BG0][x] < color) {
-			color = RENDERER_LINE[Layer_BG0][x];
-			top = SpecialEffectTarget_BG0;
-		}
+		if(RENDERER_LINE[Layer_BG0][x] < color)
+      {
+         color = RENDERER_LINE[Layer_BG0][x];
+         top   = SpecialEffectTarget_BG0;
+      }
 
-		if((uint8_t)(RENDERER_LINE[Layer_BG1][x]>>24) < (uint8_t)(color >> 24)) {
-			color = RENDERER_LINE[Layer_BG1][x];
-			top = SpecialEffectTarget_BG1;
-		}
+		if((uint8_t)(RENDERER_LINE[Layer_BG1][x]>>24) 
+            < (uint8_t)(color >> 24))
+      {
+         color = RENDERER_LINE[Layer_BG1][x];
+         top   = SpecialEffectTarget_BG1;
+      }
 
-		if((uint8_t)(RENDERER_LINE[Layer_BG2][x]>>24) < (uint8_t)(color >> 24)) {
-			color = RENDERER_LINE[Layer_BG2][x];
-			top = SpecialEffectTarget_BG2;
-		}
+		if((uint8_t)(RENDERER_LINE[Layer_BG2][x]>>24) 
+            < (uint8_t)(color >> 24))
+      {
+         color = RENDERER_LINE[Layer_BG2][x];
+         top   = SpecialEffectTarget_BG2;
+      }
 
-		if((uint8_t)(RENDERER_LINE[Layer_BG3][x]>>24) < (uint8_t)(color >> 24)) {
-			color = RENDERER_LINE[Layer_BG3][x];
-			top = SpecialEffectTarget_BG3;
-		}
+		if((uint8_t)(RENDERER_LINE[Layer_BG3][x]>>24) 
+            < (uint8_t)(color >> 24))
+      {
+         color = RENDERER_LINE[Layer_BG3][x];
+         top   = SpecialEffectTarget_BG3;
+      }
 
-		if((uint8_t)(RENDERER_LINE[Layer_OBJ][x]>>24) < (uint8_t)(color >> 24)) {
-			color = RENDERER_LINE[Layer_OBJ][x];
-			top = SpecialEffectTarget_OBJ;
+		if((uint8_t)(RENDERER_LINE[Layer_OBJ][x]>>24) 
+            < (uint8_t)(color >> 24))
+      {
+         color = RENDERER_LINE[Layer_OBJ][x];
+         top = SpecialEffectTarget_OBJ;
 
-			if(color & 0x00010000) {
-				// semi-transparent OBJ
-				uint32_t back = backdrop;
-				uint8_t top2 = SpecialEffectTarget_BD;
+         if(color & 0x00010000)
+         {
+            // semi-transparent OBJ
+            uint32_t back = backdrop;
+            uint8_t  top2 = SpecialEffectTarget_BD;
 
-				if((uint8_t)(RENDERER_LINE[Layer_BG0][x]>>24) < (uint8_t)(back >> 24)) {
-					back = RENDERER_LINE[Layer_BG0][x];
-					top2 = SpecialEffectTarget_BG0;
-				}
+            if((uint8_t)(RENDERER_LINE[Layer_BG0][x]>>24) 
+                  < (uint8_t)(back >> 24))
+            {
+               back = RENDERER_LINE[Layer_BG0][x];
+               top2 = SpecialEffectTarget_BG0;
+            }
 
-				if((uint8_t)(RENDERER_LINE[Layer_BG1][x]>>24) < (uint8_t)(back >> 24)) {
-					back = RENDERER_LINE[Layer_BG1][x];
-					top2 = SpecialEffectTarget_BG1;
-				}
+            if((uint8_t)(RENDERER_LINE[Layer_BG1][x]>>24) 
+                  < (uint8_t)(back >> 24))
+            {
+               back = RENDERER_LINE[Layer_BG1][x];
+               top2 = SpecialEffectTarget_BG1;
+            }
 
-				if((uint8_t)(RENDERER_LINE[Layer_BG2][x]>>24) < (uint8_t)(back >> 24)) {
-					back = RENDERER_LINE[Layer_BG2][x];
-					top2 = SpecialEffectTarget_BG2;
-				}
+            if((uint8_t)(RENDERER_LINE[Layer_BG2][x]>>24) 
+                  < (uint8_t)(back >> 24))
+            {
+               back = RENDERER_LINE[Layer_BG2][x];
+               top2 = SpecialEffectTarget_BG2;
+            }
 
-				if((uint8_t)(RENDERER_LINE[Layer_BG3][x]>>24) < (uint8_t)(back >> 24)) {
-					back = RENDERER_LINE[Layer_BG3][x];
-					top2 = SpecialEffectTarget_BG3;
-				}
+            if((uint8_t)(RENDERER_LINE[Layer_BG3][x]>>24) 
+                  < (uint8_t)(back >> 24))
+            {
+               back = RENDERER_LINE[Layer_BG3][x];
+               top2 = SpecialEffectTarget_BG3;
+            }
 
-				alpha_blend_brightness_switch();
-			}
-		}
+            alpha_blend_brightness_switch();
+         }
+      }
 
 
 		lineMix[x] = CONVERT_COLOR(color);
@@ -9381,6 +9406,7 @@ static void mode0RenderLine (void)
 template<int renderer_idx>
 static void mode0RenderLineNoWindow (void)
 {
+   int x;
 	INIT_RENDERER_CONTEXT(renderer_idx);
 
 #if !DEBUG_RENDERER_MODE0
@@ -9393,137 +9419,142 @@ static void mode0RenderLineNoWindow (void)
 
 	uint32_t backdrop = RENDERER_BACKDROP;
 
-	if(RENDERER_R_DISPCNT_Screen_Display_BG0) {
-		gfxDrawTextScreen<Layer_BG0, renderer_idx>(RENDERER_IO_REGISTERS[REG_BG0CNT], RENDERER_IO_REGISTERS[REG_BG0HOFS], RENDERER_IO_REGISTERS[REG_BG0VOFS]);
-	}
+	if(RENDERER_R_DISPCNT_Screen_Display_BG0)
+      gfxDrawTextScreen<Layer_BG0, renderer_idx>(RENDERER_IO_REGISTERS[REG_BG0CNT], RENDERER_IO_REGISTERS[REG_BG0HOFS], RENDERER_IO_REGISTERS[REG_BG0VOFS]);
 
-	if(RENDERER_R_DISPCNT_Screen_Display_BG1) {
+	if(RENDERER_R_DISPCNT_Screen_Display_BG1)
 		gfxDrawTextScreen<Layer_BG1, renderer_idx>(RENDERER_IO_REGISTERS[REG_BG1CNT], RENDERER_IO_REGISTERS[REG_BG1HOFS], RENDERER_IO_REGISTERS[REG_BG1VOFS]);
-	}
 
-	if(RENDERER_R_DISPCNT_Screen_Display_BG2) {
+	if(RENDERER_R_DISPCNT_Screen_Display_BG2)
 		gfxDrawTextScreen<Layer_BG2, renderer_idx>(RENDERER_IO_REGISTERS[REG_BG2CNT], RENDERER_IO_REGISTERS[REG_BG2HOFS], RENDERER_IO_REGISTERS[REG_BG2VOFS]);
-	}
 
-	if(RENDERER_R_DISPCNT_Screen_Display_BG3) {
+	if(RENDERER_R_DISPCNT_Screen_Display_BG3)
 		gfxDrawTextScreen<Layer_BG3, renderer_idx>(RENDERER_IO_REGISTERS[REG_BG3CNT], RENDERER_IO_REGISTERS[REG_BG3HOFS], RENDERER_IO_REGISTERS[REG_BG3VOFS]);
-	}
 
-	for(int x = 0; x < 240; x++) {
-		uint32_t color = backdrop;
-		uint8_t top = SpecialEffectTarget_BD;
+	for(x = 0; x < 240; x++)
+   {
+      uint32_t color = backdrop;
+      uint8_t top    = SpecialEffectTarget_BD;
 
-		if(RENDERER_LINE[Layer_BG0][x] < color) {
-			color = RENDERER_LINE[Layer_BG0][x];
-			top = SpecialEffectTarget_BG0;
-		}
+      if(RENDERER_LINE[Layer_BG0][x] < color)
+      {
+         color = RENDERER_LINE[Layer_BG0][x];
+         top   = SpecialEffectTarget_BG0;
+      }
 
-		if(RENDERER_LINE[Layer_BG1][x] < (color & 0xFF000000)) {
-			color = RENDERER_LINE[Layer_BG1][x];
-			top = SpecialEffectTarget_BG1;
-		}
+      if(RENDERER_LINE[Layer_BG1][x] < (color & 0xFF000000))
+      {
+         color = RENDERER_LINE[Layer_BG1][x];
+         top   = SpecialEffectTarget_BG1;
+      }
 
-		if(RENDERER_LINE[Layer_BG2][x] < (color & 0xFF000000)) {
-			color = RENDERER_LINE[Layer_BG2][x];
-			top = SpecialEffectTarget_BG2;
-		}
+      if(RENDERER_LINE[Layer_BG2][x] < (color & 0xFF000000))
+      {
+         color = RENDERER_LINE[Layer_BG2][x];
+         top   = SpecialEffectTarget_BG2;
+      }
 
-		if(RENDERER_LINE[Layer_BG3][x] < (color & 0xFF000000)) {
-			color = RENDERER_LINE[Layer_BG3][x];
-			top = SpecialEffectTarget_BG3;
-		}
+      if(RENDERER_LINE[Layer_BG3][x] < (color & 0xFF000000))
+      {
+         color = RENDERER_LINE[Layer_BG3][x];
+         top   = SpecialEffectTarget_BG3;
+      }
 
-		if(RENDERER_LINE[Layer_OBJ][x] < (color & 0xFF000000)) {
-			color = RENDERER_LINE[Layer_OBJ][x];
-			top = SpecialEffectTarget_OBJ;
-		}
+      if(RENDERER_LINE[Layer_OBJ][x] < (color & 0xFF000000))
+      {
+         color = RENDERER_LINE[Layer_OBJ][x];
+         top   = SpecialEffectTarget_OBJ;
+      }
 
-		if(!(color & 0x00010000)) {
-			switch(RENDERER_R_BLDCNT_Color_Special_Effect)
-			{
-				case SpecialEffect_None:
-					break;
-				case SpecialEffect_Alpha_Blending:
-					if(RENDERER_R_BLDCNT_IsTarget1(top))
-					{
-						uint32_t back = backdrop;
-						uint8_t top2 = SpecialEffectTarget_BD;
-						if((RENDERER_LINE[Layer_BG0][x] < back) && (top != SpecialEffectTarget_BG0))
-						{
-							back = RENDERER_LINE[Layer_BG0][x];
-							top2 = SpecialEffectTarget_BG0;
-						}
+      if(!(color & 0x00010000))
+      {
+         switch(RENDERER_R_BLDCNT_Color_Special_Effect)
+         {
+            case SpecialEffect_None:
+               break;
+            case SpecialEffect_Alpha_Blending:
+               if(RENDERER_R_BLDCNT_IsTarget1(top))
+               {
+                  uint32_t back = backdrop;
+                  uint8_t top2 = SpecialEffectTarget_BD;
+                  if((RENDERER_LINE[Layer_BG0][x] < back) && (top != SpecialEffectTarget_BG0))
+                  {
+                     back = RENDERER_LINE[Layer_BG0][x];
+                     top2 = SpecialEffectTarget_BG0;
+                  }
 
-						if((RENDERER_LINE[Layer_BG1][x] < (back & 0xFF000000)) && (top != SpecialEffectTarget_BG1))
-						{
-							back = RENDERER_LINE[Layer_BG1][x];
-							top2 = SpecialEffectTarget_BG1;
-						}
+                  if((RENDERER_LINE[Layer_BG1][x] < (back & 0xFF000000)) && (top != SpecialEffectTarget_BG1))
+                  {
+                     back = RENDERER_LINE[Layer_BG1][x];
+                     top2 = SpecialEffectTarget_BG1;
+                  }
 
-						if((RENDERER_LINE[Layer_BG2][x] < (back & 0xFF000000)) && (top != SpecialEffectTarget_BG2))
-						{
-							back = RENDERER_LINE[Layer_BG2][x];
-							top2 = SpecialEffectTarget_BG2;
-						}
+                  if((RENDERER_LINE[Layer_BG2][x] < (back & 0xFF000000)) && (top != SpecialEffectTarget_BG2))
+                  {
+                     back = RENDERER_LINE[Layer_BG2][x];
+                     top2 = SpecialEffectTarget_BG2;
+                  }
 
-						if((RENDERER_LINE[Layer_BG3][x] < (back & 0xFF000000)) && (top != SpecialEffectTarget_BG3))
-						{
-							back = RENDERER_LINE[Layer_BG3][x];
-							top2 = SpecialEffectTarget_BG3;
-						}
+                  if((RENDERER_LINE[Layer_BG3][x] < (back & 0xFF000000)) && (top != SpecialEffectTarget_BG3))
+                  {
+                     back = RENDERER_LINE[Layer_BG3][x];
+                     top2 = SpecialEffectTarget_BG3;
+                  }
 
-						if((RENDERER_LINE[Layer_OBJ][x] < (back & 0xFF000000)) && (top != SpecialEffectTarget_OBJ))
-						{
-							back = RENDERER_LINE[Layer_OBJ][x];
-							top2 = SpecialEffectTarget_OBJ;
-						}
+                  if((RENDERER_LINE[Layer_OBJ][x] < (back & 0xFF000000)) && (top != SpecialEffectTarget_OBJ))
+                  {
+                     back = RENDERER_LINE[Layer_OBJ][x];
+                     top2 = SpecialEffectTarget_OBJ;
+                  }
 
-						if(RENDERER_R_BLDCNT_IsTarget2(top2) && color < 0x80000000)
-						{
-							GFX_ALPHA_BLEND(color, back, coeff[COLEV & 0x1F], coeff[(COLEV >> 8) & 0x1F]);
-						}
+                  if(RENDERER_R_BLDCNT_IsTarget2(top2) && color < 0x80000000)
+                  {
+                     GFX_ALPHA_BLEND(color, back, coeff[COLEV & 0x1F], coeff[(COLEV >> 8) & 0x1F]);
+                  }
 
-					}
-					break;
-				case SpecialEffect_Brightness_Increase:
-					if(RENDERER_R_BLDCNT_IsTarget1(top))
-						color = gfxIncreaseBrightness(color, coeff[COLY & 0x1F]);
-					break;
-				case SpecialEffect_Brightness_Decrease:
-					if(RENDERER_R_BLDCNT_IsTarget1(top))
-						color = gfxDecreaseBrightness(color, coeff[COLY & 0x1F]);
-					break;
-			}
-		} else {
-			// semi-transparent OBJ
-			uint32_t back = backdrop;
-			uint8_t top2 = SpecialEffectTarget_BD;
+               }
+               break;
+            case SpecialEffect_Brightness_Increase:
+               if(RENDERER_R_BLDCNT_IsTarget1(top))
+                  color = gfxIncreaseBrightness(color, coeff[COLY & 0x1F]);
+               break;
+            case SpecialEffect_Brightness_Decrease:
+               if(RENDERER_R_BLDCNT_IsTarget1(top))
+                  color = gfxDecreaseBrightness(color, coeff[COLY & 0x1F]);
+               break;
+         }
+      }
+      else
+      {
+         // semi-transparent OBJ
+         uint32_t back = backdrop;
+         uint8_t top2 = SpecialEffectTarget_BD;
 
-			if(RENDERER_LINE[Layer_BG0][x] < back) {
-				back = RENDERER_LINE[Layer_BG0][x];
-				top2 = SpecialEffectTarget_BG0;
-			}
+         if(RENDERER_LINE[Layer_BG0][x] < back) {
+            back = RENDERER_LINE[Layer_BG0][x];
+            top2 = SpecialEffectTarget_BG0;
+         }
 
-			if(RENDERER_LINE[Layer_BG1][x] < (back & 0xFF000000)) {
-				back = RENDERER_LINE[Layer_BG1][x];
-				top2 = SpecialEffectTarget_BG1;
-			}
+         if(RENDERER_LINE[Layer_BG1][x] < (back & 0xFF000000)) {
+            back = RENDERER_LINE[Layer_BG1][x];
+            top2 = SpecialEffectTarget_BG1;
+         }
 
-			if(RENDERER_LINE[Layer_BG2][x] < (back & 0xFF000000)) {
-				back = RENDERER_LINE[Layer_BG2][x];
-				top2 = SpecialEffectTarget_BG2;
-			}
+         if(RENDERER_LINE[Layer_BG2][x] < (back & 0xFF000000)) {
+            back = RENDERER_LINE[Layer_BG2][x];
+            top2 = SpecialEffectTarget_BG2;
+         }
 
-			if(RENDERER_LINE[Layer_BG3][x] < (back & 0xFF000000)) {
-				back = RENDERER_LINE[Layer_BG3][x];
-				top2 = SpecialEffectTarget_BG3;
-			}
+         if(RENDERER_LINE[Layer_BG3][x] < (back & 0xFF000000)) {
+            back = RENDERER_LINE[Layer_BG3][x];
+            top2 = SpecialEffectTarget_BG3;
+         }
 
-			alpha_blend_brightness_switch();
-		}
+         alpha_blend_brightness_switch();
+      }
 
-		lineMix[x] = CONVERT_COLOR(color);
-	}
+      lineMix[x] = CONVERT_COLOR(color);
+   }
 }
 
 template<int renderer_idx>
