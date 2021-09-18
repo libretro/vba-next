@@ -3,8 +3,6 @@
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
-#include <string>
-#include <vector>
 
 #include <libretro.h>
 #include <vfs/vfs.h>
@@ -147,37 +145,37 @@ void retro_set_environment(retro_environment_t cb)
 
    libretro_set_core_options(environ_cb);
 
-	vfs_iface_info.required_interface_version = 1;
-	vfs_iface_info.iface                      = NULL;
-	if (environ_cb(RETRO_ENVIRONMENT_GET_VFS_INTERFACE, &vfs_iface_info))
-		filestream_vfs_init(&vfs_iface_info);
+   vfs_iface_info.required_interface_version = 1;
+   vfs_iface_info.iface                      = NULL;
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VFS_INTERFACE, &vfs_iface_info))
+      filestream_vfs_init(&vfs_iface_info);
 }
 
 void retro_get_system_info(struct retro_system_info *info)
 {
 #ifdef LOAD_FROM_MEMORY
-   info->need_fullpath = false;
+   info->need_fullpath    = false;
 #else   
-   info->need_fullpath = true;
+   info->need_fullpath    = true;
 #endif
    info->valid_extensions = "gba";
 #ifndef GIT_VERSION
 #define GIT_VERSION ""
 #endif
-   info->library_version = "v1.0.2" GIT_VERSION;
-   info->library_name = "VBA Next";
-   info->block_extract = false;
+   info->library_version  = "v1.0.2" GIT_VERSION;
+   info->library_name     = "VBA Next";
+   info->block_extract    = false;
 }
 
 void retro_get_system_av_info(struct retro_system_av_info *info)
 {
-   info->geometry.base_width = 240;
-   info->geometry.base_height = 160;
-   info->geometry.max_width = 240;
-   info->geometry.max_height = 160;
+   info->geometry.base_width   = 240;
+   info->geometry.base_height  = 160;
+   info->geometry.max_width    = 240;
+   info->geometry.max_height   = 160;
    info->geometry.aspect_ratio = 3.0 / 2.0;
-   info->timing.fps =  16777216.0 / 280896.0;
-   info->timing.sample_rate = 32000.0;
+   info->timing.fps            = 16777216.0 / 280896.0;
+   info->timing.sample_rate    = 32000.0;
 }
 
 static void check_system_specs(void)
@@ -185,10 +183,6 @@ static void check_system_specs(void)
    unsigned level = 10;
    environ_cb(RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL, &level);
 }
-
-#ifdef PROFILE_ANDROID
-#include <prof.h>
-#endif
 
 void retro_init(void)
 {
@@ -216,10 +210,6 @@ void retro_init(void)
 #endif
 
    check_system_specs();
-
-#ifdef PROFILE_ANDROID
-   monstartup("vba_next_libretro_android.so");
-#endif
 
 #if THREADED_RENDERER
 	ThreadedRendererStart();
@@ -498,9 +488,6 @@ void retro_deinit(void)
 	ThreadedRendererStop();
 #endif
 
-#ifdef PROFILE_ANDROID
-	moncleanup();
-#endif
 	CPUCleanUp();
 
    libretro_supports_bitmasks = false;
