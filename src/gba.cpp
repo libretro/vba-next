@@ -2291,15 +2291,15 @@ static void BIOS_SoftReset (void)
 
 #define BIOS_REGISTER_RAM_RESET() BIOS_RegisterRamReset(bus.reg[0].I);
 
-#define BIOS_SQRT() bus.reg[0].I = (u32)sqrt((double)bus.reg[0].I);
+#define BIOS_SQRT() bus.reg[0].I = (u32)sqrt((float)bus.reg[0].I);
 
 #define BIOS_MIDI_KEY_2_FREQ() \
 { \
 	int freq = CPUReadMemory(bus.reg[0].I+4); \
-	double tmp; \
-	tmp = ((double)(180 - bus.reg[1].I)) - ((double)bus.reg[2].I / 256.f); \
-	tmp = pow((double)2.f, tmp / 12.f); \
-	bus.reg[0].I = (int)((double)freq / tmp); \
+	float tmp; \
+	tmp = ((float)(180 - bus.reg[1].I)) - ((float)bus.reg[2].I / 256.f); \
+	tmp = pow((float)2.f, tmp / 12.f); \
+	bus.reg[0].I = (int)((float)freq / tmp); \
 }
 
 /*

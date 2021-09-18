@@ -86,7 +86,7 @@ class Blip_Synth
 
 	Blip_Synth();
 
-	void volume( double v ) { delta_factor = int ((v * 1.0) * (1L << BLIP_SAMPLE_BITS) + 0.5); }
+	void volume( float v ) { delta_factor = int ((v * 1.0) * (1L << BLIP_SAMPLE_BITS) + 0.5); }
 	void offset( int32_t, int delta, Blip_Buffer* ) const;
 	void offset_resampled( uint32_t, int delta, Blip_Buffer* ) const;
 	void offset_inline( int32_t t, int delta, Blip_Buffer* buf ) const {
@@ -409,7 +409,7 @@ struct gb_apu_t
 	int32_t		frame_time;	// time of next frame sequencer action
 	int32_t		frame_period;       // clocks between each frame sequencer step
 	int32_t         frame_phase;    // phase of next frame sequencer step
-	double		volume_;
+	float		volume_;
 	Gb_Osc*		oscs [OSC_COUNT];
 	Gb_Sweep_Square square1;
 	Gb_Square       square2;
@@ -482,7 +482,7 @@ static void gb_apu_reduce_clicks( bool reduce )
 
 static void gb_apu_synth_volume( int iv )
 {
-	double v = gb_apu.volume_ * 0.60 / OSC_COUNT / 15 /*steps*/ / 8 /*master vol range*/ * iv;
+	float v = gb_apu.volume_ * 0.60 / OSC_COUNT / 15 /*steps*/ / 8 /*master vol range*/ * iv;
 	gb_apu.good_synth.volume( v );
 	gb_apu.med_synth .volume( v );
 }
@@ -799,7 +799,7 @@ static void gb_apu_set_output( Blip_Buffer* center, Blip_Buffer* left, Blip_Buff
 	while ( i < osc );
 }
 
-static void gb_apu_volume( double v )
+static void gb_apu_volume( float v )
 {
 	if ( gb_apu.volume_ != v )
 	{
@@ -1522,7 +1522,7 @@ const char * Blip_Buffer::set_sample_rate( long new_rate, int msec )
 
 uint32_t Blip_Buffer::clock_rate_factor( long rate ) const
 {
-   double ratio = (double) sample_rate_ / rate;
+   float ratio = (float) sample_rate_ / rate;
    int32_t factor = (int32_t) floor( ratio * (1L << BLIP_BUFFER_ACCURACY) + 0.5 );
    return (uint32_t) factor;
 }
