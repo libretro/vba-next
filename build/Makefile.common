@@ -81,7 +81,7 @@ ifeq ($(USE_THREADED_RENDERER), 1)
 ifneq ($(platform), vita)
 SOURCES_C += $(LIBRETRO_COMM_DIR)/rthreads/rthreads.c
 endif
-SOURCES_CXX += $(CORE_DIR)/src/thread.cpp
+SOURCES_C += $(CORE_DIR)/src/thread.c
 endif
 OBJECTS_COND += $(LIBRETRO_COMM_DIR)/rthreads/rthreads.o
 OBJECTS_COND += $(CORE_DIR)/src/thread.o

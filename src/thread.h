@@ -10,10 +10,17 @@
 #include <stdint.h>
 
 #if VITA
-	#include <psp2/types.h>
-	typedef SceUID thread_t;
+#include <psp2/types.h>
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#if VITA
+typedef SceUID thread_t;
 #else
-	typedef void* thread_t;
+typedef void* thread_t;
 #endif
 
 #ifdef THREADED_RENDERER
@@ -23,7 +30,10 @@ thread_t thread_get();
 thread_t thread_run(threadfunc_t func, void* p, int priority);
 void thread_sleep(int ms);
 void thread_set_priority(thread_t id, int priority);
+#endif
 
+#ifdef __cplusplus
+}
 #endif
 
 #endif
