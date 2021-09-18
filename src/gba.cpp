@@ -673,9 +673,7 @@ static int gbaSaveType = 0; // used to remember the save type on reset
 // Waitstates when executing opcode
 static INLINE int codeTicksAccess(u32 address, u8 bit32) // THUMB NON SEQ
 {
-	int addr, ret;
-
-	addr = (address>>24) & 15;
+	int addr = (address>>24) & 15;
 
 	if (unsigned(addr - 0x08) <= 5)
 	{
@@ -693,11 +691,9 @@ static INLINE int codeTicksAccess(u32 address, u8 bit32) // THUMB NON SEQ
 	bus.busPrefetchCount = 0;
 
 	if(bit32)		/* ARM NON SEQ */
-		ret = memoryWait32[addr];
-	else			/* THUMB NON SEQ */
-		ret = memoryWait[addr];
-
-	return ret;
+		return memoryWait32[addr];
+   /* THUMB NON SEQ */
+   return memoryWait[addr];
 }
 
 static INLINE int codeTicksAccessSeq16(u32 address) // THUMB SEQ
@@ -808,8 +804,7 @@ static uint8_t* CPUDecodeAddress(uint32_t address)
 			if((address < 0x4000400) && ioReadable[address & 0x3fc]) {
 				if(ioReadable[(address & 0x3fc) + 2])
 					return ioMem + (address & 0x3fC);
-				else
-					return ioMem + (address & 0x3fc);
+            return ioMem + (address & 0x3fc);
 			}
 			else
 				goto unreadable;
@@ -1388,21 +1383,22 @@ static void BIOS_ArcTan (void)
 	b = ((b * a) >> 14) + 0x2081;
 	b = ((b * a) >> 14) + 0x3651;
 	b = ((b * a) >> 14) + 0xA2F9;
-	bus.reg[0].I = (i * b) >> 16;
-    bus.reg[1].I = a;
-    bus.reg[3].I = b;
+   bus.reg[0].I = (i * b) >> 16;
+   bus.reg[1].I = a;
+   bus.reg[3].I = b;
 }
 
 static void BIOS_Div (void)
 {
 	int number = bus.reg[0].I;
-	int denom = bus.reg[1].I;
+	int denom  = bus.reg[1].I;
 
-	if(denom != 0)
+	if (denom != 0)
 	{
+      s32 temp;
 		bus.reg[0].I = number / denom;
 		bus.reg[1].I = number % denom;
-		s32 temp = (s32)bus.reg[0].I;
+		temp         = (s32)bus.reg[0].I;
 		bus.reg[3].I = temp < 0 ? (u32)-temp : (u32)temp;
 	}
 }
@@ -1444,27 +1440,26 @@ static void BIOS_ArcTan2 (void)
 	bus.reg[3].I = 0x170;
 }
 
-static void BIOS_BitUnPack (void)
+static void BIOS_BitUnPack(void)
 {
 	u32 source = bus.reg[0].I;
-	u32 dest = bus.reg[1].I;
+	u32 dest   = bus.reg[1].I;
 	u32 header = bus.reg[2].I;
-
-	int len = CPUReadHalfWord(header);
-	// check address
-	if(((source & 0xe000000) == 0) ||
-			((source + len) & 0xe000000) == 0)
+	int len    = CPUReadHalfWord(header);
+	/* check address */
+   if(       ((source & 0xe000000)        == 0)
+         || (((source + len) & 0xe000000) == 0)
+     )
 		return;
 
-	int bits = CPUReadByte(header+2);
-	int revbits = 8 - bits;
+	int bits          = CPUReadByte(header+2);
+	int revbits       = 8 - bits;
 	// u32 value = 0;
-	u32 base = CPUReadMemory(header+4);
-	bool addBase = (base & 0x80000000) ? true : false;
+	u32 base          = CPUReadMemory(header+4);
+	bool addBase      = (base & 0x80000000) ? true : false;
 	base &= 0x7fffffff;
-	int dataSize = CPUReadByte(header+3);
-
-	int data = 0;
+	int dataSize      = CPUReadByte(header+3);
+	int data          = 0;
 	int bitwritecount = 0;
 	while(1)
 	{
@@ -1499,11 +1494,12 @@ static void BIOS_BitUnPack (void)
 
 static void BIOS_BgAffineSet (void)
 {
-	u32 src = bus.reg[0].I;
+   int i;
+	u32 src  = bus.reg[0].I;
 	u32 dest = bus.reg[1].I;
-	int num = bus.reg[2].I;
+	int num  = bus.reg[2].I;
 
-	for(int i = 0; i < num; i++)
+	for(i = 0; i < num; i++)
 	{
 		s32 cx = CPUReadMemory(src);
 		src+=4;
@@ -1550,17 +1546,16 @@ static void BIOS_BgAffineSet (void)
 static void BIOS_CpuSet (void)
 {
 	u32 source = bus.reg[0].I;
-	u32 dest = bus.reg[1].I;
-	u32 cnt = bus.reg[2].I;
-
-	int count = cnt & 0x1FFFFF;
+	u32 dest   = bus.reg[1].I;
+	u32 cnt    = bus.reg[2].I;
+	int count  = cnt & 0x1FFFFF;
 
 	// 32-bit ?
 	if((cnt >> 26) & 1)
 	{
 		// needed for 32-bit mode!
 		source &= 0xFFFFFFFC;
-		dest &= 0xFFFFFFFC;
+		dest   &= 0xFFFFFFFC;
 		// fill ?
 		if((cnt >> 24) & 1) {
 			u32 value = (source>0x0EFFFFFF ? 0x1CAD1CAD : CPUReadMemory(source));
@@ -1638,14 +1633,14 @@ static void BIOS_CpuSet (void)
 static void BIOS_CpuFastSet (void)
 {
 	u32 source = bus.reg[0].I;
-	u32 dest = bus.reg[1].I;
-	u32 cnt = bus.reg[2].I;
+	u32 dest   = bus.reg[1].I;
+	u32 cnt    = bus.reg[2].I;
 
 	// needed for 32-bit mode!
-	source &= 0xFFFFFFFC;
-	dest &= 0xFFFFFFFC;
+	source    &= 0xFFFFFFFC;
+	dest      &= 0xFFFFFFFC;
 
-	int count = cnt & 0x1FFFFF;
+	int count  = cnt & 0x1FFFFF;
 
 	// fill?
 	if((cnt >> 24) & 1) {
@@ -1696,10 +1691,9 @@ static void BIOS_CpuFastSet (void)
 static void BIOS_Diff8bitUnFilterWram (void)
 {
 	u32 source = bus.reg[0].I;
-	u32 dest = bus.reg[1].I;
-
+	u32 dest   = bus.reg[1].I;
 	u32 header = CPUReadMemory(source);
-	source += 4;
+	source    += 4;
 
 	if(((source & 0xe000000) == 0) ||
 	(((source + ((header >> 8) & 0x1fffff)) & 0xe000000) == 0))
@@ -2295,10 +2289,9 @@ static void BIOS_SoftReset (void)
 
 #define BIOS_MIDI_KEY_2_FREQ() \
 { \
-	int freq = CPUReadMemory(bus.reg[0].I+4); \
-	float tmp; \
-	tmp = ((float)(180 - bus.reg[1].I)) - ((float)bus.reg[2].I / 256.f); \
-	tmp = pow((float)2.f, tmp / 12.f); \
+	int  freq    = CPUReadMemory(bus.reg[0].I+4); \
+	float tmp    = ((float)(180 - bus.reg[1].I)) - ((float)bus.reg[2].I / 256.f); \
+	tmp          = pow((float)2.f, tmp / 12.f); \
 	bus.reg[0].I = (int)((float)freq / tmp); \
 }
 
@@ -6577,7 +6570,7 @@ static int thumbExecute (void)
 	GBA GFX
 ============================================================ */
 
-static u32 map_widths[] = { 256, 512, 256, 512 };
+static u32 map_widths [] = { 256, 512, 256, 512 };
 static u32 map_heights[] = { 256, 256, 512, 512 };
 
 #ifdef TILED_RENDERING
@@ -6827,9 +6820,7 @@ static void gfxDrawTextScreen(u16 control, u16 hofs, u16 vofs)
       x += 8;
 
       if (xxx == 256 && sizeX > 256)
-      {
          screenSource = screenBase + 0x400 + yshift;
-      }
       else if (xxx >= sizeX)
       {
          xxx = 0;
@@ -6839,9 +6830,7 @@ static void gfxDrawTextScreen(u16 control, u16 hofs, u16 vofs)
 
    // Last tile, if clipped
    if (firstTileX)
-   {
       gfxDrawTileClipped(readTile(screenSource, yyy, charBase, palette, prio), &RENDERER_LINE[layer][x], 0, firstTileX);
-   }
 
    if (mosaicOn)
    {
@@ -7001,30 +6990,22 @@ static u32 map_sizes_rot[] = { 128, 256, 512, 1024 };
 #if THREADED_RENDERER
 static INLINE void fetchDrawRotScreen(u16 control, u16 x_l, u16 x_h, u16 y_l, u16 y_h, u16 pa, u16 pb, u16 pc, u16 pd, int& currentX, int& currentY, int changed)
 {
-#ifdef BRANCHLESS_GBA_GFX
-	int dx = pa & 0x7FFF;
+	int dx  = pa & 0x7FFF;
 	int dmx = pb & 0x7FFF;
-	int dy = pc & 0x7FFF;
+	int dy  = pc & 0x7FFF;
 	int dmy = pd & 0x7FFF;
-
-	dx |= isel(-(pa & 0x8000), 0, 0xFFFF8000);
-
+#ifdef BRANCHLESS_GBA_GFX
+	dx  |= isel(-(pa & 0x8000), 0, 0xFFFF8000);
 	dmx |= isel(-(pb & 0x8000), 0, 0xFFFF8000);
-
-	dy |= isel(-(pc & 0x8000), 0, 0xFFFF8000);
-
+	dy  |= isel(-(pc & 0x8000), 0, 0xFFFF8000);
 	dmy |= isel(-(pd & 0x8000), 0, 0xFFFF8000);
 #else
-	int dx = pa & 0x7FFF;
 	if(pa & 0x8000)
 		dx |= 0xFFFF8000;
-	int dmx = pb & 0x7FFF;
 	if(pb & 0x8000)
 		dmx |= 0xFFFF8000;
-	int dy = pc & 0x7FFF;
 	if(pc & 0x8000)
 		dy |= 0xFFFF8000;
-	int dmy = pd & 0x7FFF;
 	if(pd & 0x8000)
 		dmy |= 0xFFFF8000;
 #endif
@@ -7052,29 +7033,22 @@ static INLINE void fetchDrawRotScreen(u16 control, u16 x_l, u16 x_h, u16 y_l, u1
 
 static INLINE void fetchDrawRotScreen16Bit( int& currentX,  int& currentY, int changed)
 {
-#ifdef BRANCHLESS_GBA_GFX
-	int dx = io_registers[REG_BG2PA] & 0x7FFF;
-	dx |= isel(-(io_registers[REG_BG2PA] & 0x8000), 0, 0xFFFF8000);
-
+	int dx  = io_registers[REG_BG2PA] & 0x7FFF;
 	int dmx = io_registers[REG_BG2PB] & 0x7FFF;
-	dmx |= isel(-(io_registers[REG_BG2PB] & 0x8000), 0, 0xFFFF8000);
-
-	int dy = io_registers[REG_BG2PC] & 0x7FFF;
-	dy |= isel(-(io_registers[REG_BG2PC] & 0x8000), 0, 0xFFFF8000);
-
+	int dy  = io_registers[REG_BG2PC] & 0x7FFF;
 	int dmy = io_registers[REG_BG2PD] & 0x7FFF;
-	dmy |= isel(-(io_registers[REG_BG2PD] & 0x8000), 0, 0xFFFF8000);
+#ifdef BRANCHLESS_GBA_GFX
+	dx     |= isel(-(io_registers[REG_BG2PA] & 0x8000), 0, 0xFFFF8000);
+	dmx    |= isel(-(io_registers[REG_BG2PB] & 0x8000), 0, 0xFFFF8000);
+	dy     |= isel(-(io_registers[REG_BG2PC] & 0x8000), 0, 0xFFFF8000);
+	dmy    |= isel(-(io_registers[REG_BG2PD] & 0x8000), 0, 0xFFFF8000);
 #else
-	int dx = io_registers[REG_BG2PA] & 0x7FFF;
 	if(io_registers[REG_BG2PA] & 0x8000)
-		dx |= 0xFFFF8000;
-	int dmx = io_registers[REG_BG2PB] & 0x7FFF;
+		dx  |= 0xFFFF8000;
 	if(io_registers[REG_BG2PB] & 0x8000)
 		dmx |= 0xFFFF8000;
-	int dy = io_registers[REG_BG2PC] & 0x7FFF;
 	if(io_registers[REG_BG2PC] & 0x8000)
-		dy |= 0xFFFF8000;
-	int dmy = io_registers[REG_BG2PD] & 0x7FFF;
+		dy  |= 0xFFFF8000;
 	if(io_registers[REG_BG2PD] & 0x8000)
 		dmy |= 0xFFFF8000;
 #endif
@@ -7102,29 +7076,22 @@ static INLINE void fetchDrawRotScreen16Bit( int& currentX,  int& currentY, int c
 
 static INLINE void fetchDrawRotScreen256(int &currentX, int& currentY, int changed)
 {
-#ifdef BRANCHLESS_GBA_GFX
-	int dx = io_registers[REG_BG2PA] & 0x7FFF;
-	dx |= isel(-(io_registers[REG_BG2PA] & 0x8000), 0, 0xFFFF8000);
-
+	int dx  = io_registers[REG_BG2PA] & 0x7FFF;
 	int dmx = io_registers[REG_BG2PB] & 0x7FFF;
-	dmx |= isel(-(io_registers[REG_BG2PB] & 0x8000), 0, 0xFFFF8000);
-
-	int dy = io_registers[REG_BG2PC] & 0x7FFF;
-	dy |= isel(-(io_registers[REG_BG2PC] & 0x8000), 0, 0xFFFF8000);
-
+	int dy  = io_registers[REG_BG2PC] & 0x7FFF;
 	int dmy = io_registers[REG_BG2PD] & 0x7FFF;
-	dmy |= isel(-(io_registers[REG_BG2PD] & 0x8000), 0, 0xFFFF8000);
+#ifdef BRANCHLESS_GBA_GFX
+	dx     |= isel(-(io_registers[REG_BG2PA] & 0x8000), 0, 0xFFFF8000);
+	dmx    |= isel(-(io_registers[REG_BG2PB] & 0x8000), 0, 0xFFFF8000);
+	dy     |= isel(-(io_registers[REG_BG2PC] & 0x8000), 0, 0xFFFF8000);
+	dmy    |= isel(-(io_registers[REG_BG2PD] & 0x8000), 0, 0xFFFF8000);
 #else
-	int dx = io_registers[REG_BG2PA] & 0x7FFF;
 	if(io_registers[REG_BG2PA] & 0x8000)
 		dx |= 0xFFFF8000;
-	int dmx = io_registers[REG_BG2PB] & 0x7FFF;
 	if(io_registers[REG_BG2PB] & 0x8000)
 		dmx |= 0xFFFF8000;
-	int dy = io_registers[REG_BG2PC] & 0x7FFF;
 	if(io_registers[REG_BG2PC] & 0x8000)
 		dy |= 0xFFFF8000;
-	int dmy = io_registers[REG_BG2PD] & 0x7FFF;
 	if(io_registers[REG_BG2PD] & 0x8000)
 		dmy |= 0xFFFF8000;
 #endif
@@ -7152,29 +7119,22 @@ static INLINE void fetchDrawRotScreen256(int &currentX, int& currentY, int chang
 
 static INLINE void fetchDrawRotScreen16Bit160(int& currentX, int& currentY, int changed)
 {
-#ifdef BRANCHLESS_GBA_GFX
-	int dx = io_registers[REG_BG2PA] & 0x7FFF;
-	dx |= isel(-(io_registers[REG_BG2PA] & 0x8000), 0, 0xFFFF8000);
-
+	int dx  = io_registers[REG_BG2PA] & 0x7FFF;
 	int dmx = io_registers[REG_BG2PB] & 0x7FFF;
-	dmx |= isel(-(io_registers[REG_BG2PB] & 0x8000), 0, 0xFFFF8000);
-
-	int dy = io_registers[REG_BG2PC] & 0x7FFF;
-	dy |= isel(-(io_registers[REG_BG2PC] & 0x8000), 0, 0xFFFF8000);
-
+	int dy  = io_registers[REG_BG2PC] & 0x7FFF;
 	int dmy = io_registers[REG_BG2PD] & 0x7FFF;
-	dmy |= isel(-(io_registers[REG_BG2PD] & 0x8000), 0, 0xFFFF8000);
+#ifdef BRANCHLESS_GBA_GFX
+	dx     |= isel(-(io_registers[REG_BG2PA] & 0x8000), 0, 0xFFFF8000);
+	dmx    |= isel(-(io_registers[REG_BG2PB] & 0x8000), 0, 0xFFFF8000);
+	dy     |= isel(-(io_registers[REG_BG2PC] & 0x8000), 0, 0xFFFF8000);
+	dmy    |= isel(-(io_registers[REG_BG2PD] & 0x8000), 0, 0xFFFF8000);
 #else
-	int dx = io_registers[REG_BG2PA] & 0x7FFF;
 	if(io_registers[REG_BG2PA] & 0x8000)
 		dx |= 0xFFFF8000;
-	int dmx = io_registers[REG_BG2PB] & 0x7FFF;
 	if(io_registers[REG_BG2PB] & 0x8000)
 		dmx |= 0xFFFF8000;
-	int dy = io_registers[REG_BG2PC] & 0x7FFF;
 	if(io_registers[REG_BG2PC] & 0x8000)
 		dy |= 0xFFFF8000;
-	int dmy = io_registers[REG_BG2PD] & 0x7FFF;
 	if(io_registers[REG_BG2PD] & 0x8000)
 		dmy |= 0xFFFF8000;
 #endif
@@ -7221,30 +7181,22 @@ u16 pa,  u16 pb, u16 pc,  u16 pd, int& currentX, int& currentY, int changed)
 
 	int yshift = ((control >> 14) & 3)+4;
 
-#ifdef BRANCHLESS_GBA_GFX
-	int dx = pa & 0x7FFF;
+	int dx  = pa & 0x7FFF;
 	int dmx = pb & 0x7FFF;
-	int dy = pc & 0x7FFF;
+	int dy  = pc & 0x7FFF;
 	int dmy = pd & 0x7FFF;
-
-	dx |= isel(-(pa & 0x8000), 0, 0xFFFF8000);
-
+#ifdef BRANCHLESS_GBA_GFX
+	dx  |= isel(-(pa & 0x8000), 0, 0xFFFF8000);
 	dmx |= isel(-(pb & 0x8000), 0, 0xFFFF8000);
-
-	dy |= isel(-(pc & 0x8000), 0, 0xFFFF8000);
-
+	dy  |= isel(-(pc & 0x8000), 0, 0xFFFF8000);
 	dmy |= isel(-(pd & 0x8000), 0, 0xFFFF8000);
 #else
-	int dx = pa & 0x7FFF;
 	if(pa & 0x8000)
 		dx |= 0xFFFF8000;
-	int dmx = pb & 0x7FFF;
 	if(pb & 0x8000)
 		dmx |= 0xFFFF8000;
-	int dy = pc & 0x7FFF;
 	if(pc & 0x8000)
 		dy |= 0xFFFF8000;
-	int dmy = pd & 0x7FFF;
 	if(pd & 0x8000)
 		dmy |= 0xFFFF8000;
 #endif
@@ -7407,29 +7359,22 @@ static INLINE void gfxDrawRotScreen16Bit( int& currentX,  int& currentY, int cha
 	if(BG2Y_H & 0x0800)
 		startY |= 0xF8000000;
 
+	int dx   = RENDERER_IO_REGISTERS[REG_BG2PA] & 0x7FFF;
+	int dmx  = RENDERER_IO_REGISTERS[REG_BG2PB] & 0x7FFF;
+	int dy   = RENDERER_IO_REGISTERS[REG_BG2PC] & 0x7FFF;
+	int dmy  = RENDERER_IO_REGISTERS[REG_BG2PD] & 0x7FFF;
 #ifdef BRANCHLESS_GBA_GFX
-	int dx = RENDERER_IO_REGISTERS[REG_BG2PA] & 0x7FFF;
-	dx |= isel(-(RENDERER_IO_REGISTERS[REG_BG2PA] & 0x8000), 0, 0xFFFF8000);
-
-	int dmx = RENDERER_IO_REGISTERS[REG_BG2PB] & 0x7FFF;
-	dmx |= isel(-(RENDERER_IO_REGISTERS[REG_BG2PB] & 0x8000), 0, 0xFFFF8000);
-
-	int dy = RENDERER_IO_REGISTERS[REG_BG2PC] & 0x7FFF;
-	dy |= isel(-(RENDERER_IO_REGISTERS[REG_BG2PC] & 0x8000), 0, 0xFFFF8000);
-
-	int dmy = RENDERER_IO_REGISTERS[REG_BG2PD] & 0x7FFF;
-	dmy |= isel(-(RENDERER_IO_REGISTERS[REG_BG2PD] & 0x8000), 0, 0xFFFF8000);
+	dx      |= isel(-(RENDERER_IO_REGISTERS[REG_BG2PA] & 0x8000), 0, 0xFFFF8000);
+	dmx     |= isel(-(RENDERER_IO_REGISTERS[REG_BG2PB] & 0x8000), 0, 0xFFFF8000);
+	dy      |= isel(-(RENDERER_IO_REGISTERS[REG_BG2PC] & 0x8000), 0, 0xFFFF8000);
+	dmy     |= isel(-(RENDERER_IO_REGISTERS[REG_BG2PD] & 0x8000), 0, 0xFFFF8000);
 #else
-	int dx = RENDERER_IO_REGISTERS[REG_BG2PA] & 0x7FFF;
 	if(RENDERER_IO_REGISTERS[REG_BG2PA] & 0x8000)
 		dx |= 0xFFFF8000;
-	int dmx = RENDERER_IO_REGISTERS[REG_BG2PB] & 0x7FFF;
 	if(RENDERER_IO_REGISTERS[REG_BG2PB] & 0x8000)
 		dmx |= 0xFFFF8000;
-	int dy = RENDERER_IO_REGISTERS[REG_BG2PC] & 0x7FFF;
 	if(RENDERER_IO_REGISTERS[REG_BG2PC] & 0x8000)
 		dy |= 0xFFFF8000;
-	int dmy = RENDERER_IO_REGISTERS[REG_BG2PD] & 0x7FFF;
 	if(RENDERER_IO_REGISTERS[REG_BG2PD] & 0x8000)
 		dmy |= 0xFFFF8000;
 #endif
@@ -7506,29 +7451,22 @@ static INLINE void gfxDrawRotScreen256(int &currentX, int& currentY, int changed
 	if(BG2Y_H & 0x0800)
 		startY |= 0xF8000000;
 
-#ifdef BRANCHLESS_GBA_GFX
-	int dx = RENDERER_IO_REGISTERS[REG_BG2PA] & 0x7FFF;
-	dx |= isel(-(RENDERER_IO_REGISTERS[REG_BG2PA] & 0x8000), 0, 0xFFFF8000);
-
+	int dx  = RENDERER_IO_REGISTERS[REG_BG2PA] & 0x7FFF;
 	int dmx = RENDERER_IO_REGISTERS[REG_BG2PB] & 0x7FFF;
-	dmx |= isel(-(RENDERER_IO_REGISTERS[REG_BG2PB] & 0x8000), 0, 0xFFFF8000);
-
-	int dy = RENDERER_IO_REGISTERS[REG_BG2PC] & 0x7FFF;
-	dy |= isel(-(RENDERER_IO_REGISTERS[REG_BG2PC] & 0x8000), 0, 0xFFFF8000);
-
+	int dy  = RENDERER_IO_REGISTERS[REG_BG2PC] & 0x7FFF;
 	int dmy = RENDERER_IO_REGISTERS[REG_BG2PD] & 0x7FFF;
-	dmy |= isel(-(RENDERER_IO_REGISTERS[REG_BG2PD] & 0x8000), 0, 0xFFFF8000);
+#ifdef BRANCHLESS_GBA_GFX
+	dx     |= isel(-(RENDERER_IO_REGISTERS[REG_BG2PA] & 0x8000), 0, 0xFFFF8000);
+	dmx    |= isel(-(RENDERER_IO_REGISTERS[REG_BG2PB] & 0x8000), 0, 0xFFFF8000);
+	dy     |= isel(-(RENDERER_IO_REGISTERS[REG_BG2PC] & 0x8000), 0, 0xFFFF8000);
+	dmy    |= isel(-(RENDERER_IO_REGISTERS[REG_BG2PD] & 0x8000), 0, 0xFFFF8000);
 #else
-	int dx = RENDERER_IO_REGISTERS[REG_BG2PA] & 0x7FFF;
 	if(RENDERER_IO_REGISTERS[REG_BG2PA] & 0x8000)
-		dx |= 0xFFFF8000;
-	int dmx = RENDERER_IO_REGISTERS[REG_BG2PB] & 0x7FFF;
+		dx  |= 0xFFFF8000;
 	if(RENDERER_IO_REGISTERS[REG_BG2PB] & 0x8000)
 		dmx |= 0xFFFF8000;
-	int dy = RENDERER_IO_REGISTERS[REG_BG2PC] & 0x7FFF;
 	if(RENDERER_IO_REGISTERS[REG_BG2PC] & 0x8000)
-		dy |= 0xFFFF8000;
-	int dmy = RENDERER_IO_REGISTERS[REG_BG2PD] & 0x7FFF;
+		dy  |= 0xFFFF8000;
 	if(RENDERER_IO_REGISTERS[REG_BG2PD] & 0x8000)
 		dmy |= 0xFFFF8000;
 #endif
@@ -7608,29 +7546,22 @@ static INLINE void gfxDrawRotScreen16Bit160(int& currentX, int& currentY, int ch
 	if(BG2Y_H & 0x0800)
 		startY |= 0xF8000000;
 
-#ifdef BRANCHLESS_GBA_GFX
-	int dx = RENDERER_IO_REGISTERS[REG_BG2PA] & 0x7FFF;
-	dx |= isel(-(RENDERER_IO_REGISTERS[REG_BG2PA] & 0x8000), 0, 0xFFFF8000);
-
+	int dx  = RENDERER_IO_REGISTERS[REG_BG2PA] & 0x7FFF;
 	int dmx = RENDERER_IO_REGISTERS[REG_BG2PB] & 0x7FFF;
-	dmx |= isel(-(RENDERER_IO_REGISTERS[REG_BG2PB] & 0x8000), 0, 0xFFFF8000);
-
-	int dy = RENDERER_IO_REGISTERS[REG_BG2PC] & 0x7FFF;
-	dy |= isel(-(RENDERER_IO_REGISTERS[REG_BG2PC] & 0x8000), 0, 0xFFFF8000);
-
+	int dy  = RENDERER_IO_REGISTERS[REG_BG2PC] & 0x7FFF;
 	int dmy = RENDERER_IO_REGISTERS[REG_BG2PD] & 0x7FFF;
+#ifdef BRANCHLESS_GBA_GFX
+	dx  |= isel(-(RENDERER_IO_REGISTERS[REG_BG2PA] & 0x8000), 0, 0xFFFF8000);
+	dmx |= isel(-(RENDERER_IO_REGISTERS[REG_BG2PB] & 0x8000), 0, 0xFFFF8000);
+	dy  |= isel(-(RENDERER_IO_REGISTERS[REG_BG2PC] & 0x8000), 0, 0xFFFF8000);
 	dmy |= isel(-(RENDERER_IO_REGISTERS[REG_BG2PD] & 0x8000), 0, 0xFFFF8000);
 #else
-	int dx = RENDERER_IO_REGISTERS[REG_BG2PA] & 0x7FFF;
 	if(RENDERER_IO_REGISTERS[REG_BG2PA] & 0x8000)
 		dx |= 0xFFFF8000;
-	int dmx = RENDERER_IO_REGISTERS[REG_BG2PB] & 0x7FFF;
 	if(RENDERER_IO_REGISTERS[REG_BG2PB] & 0x8000)
 		dmx |= 0xFFFF8000;
-	int dy = RENDERER_IO_REGISTERS[REG_BG2PC] & 0x7FFF;
 	if(RENDERER_IO_REGISTERS[REG_BG2PC] & 0x8000)
 		dy |= 0xFFFF8000;
-	int dmy = RENDERER_IO_REGISTERS[REG_BG2PD] & 0x7FFF;
 	if(RENDERER_IO_REGISTERS[REG_BG2PD] & 0x8000)
 		dmy |= 0xFFFF8000;
 #endif
@@ -7750,13 +7681,13 @@ static void gfxDrawSprites (void)
 		else if (a0val & 2)
 		{
 #ifdef BRANCHLESS_GBA_GFX
-			sizeX >>= isel(-(sizeX>8), 0, 1);
+			sizeX >>= isel(-(sizeX > 8), 0, 1);
 			sizeY <<= isel(-(sizeY & (~31u)), 1, 0);
 #else
-			if (sizeX>8)
-				sizeX>>=1;
-			if (sizeY<32)
-				sizeY<<=1;
+			if (sizeX > 8)
+				sizeX >>= 1;
+			if (sizeY < 32)
+				sizeY <<= 1;
 #endif
 
 		}
@@ -9131,7 +9062,7 @@ static int utilGetSize(int size)
 static uint8_t *utilLoad(const char *file,
       bool (*accept)(const char *), uint8_t *data, int &size)
 {
-   uint8_t *image = NULL;
+   uint8_t *image  = NULL;
    RFILE *fp       = filestream_open(file, RETRO_VFS_FILE_ACCESS_READ,
          RETRO_VFS_FILE_ACCESS_HINT_NONE);
    if (!fp)
