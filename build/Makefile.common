@@ -1,7 +1,13 @@
 LIBRETRO_COMM_DIR := $(CORE_DIR)/libretro-common
 INCFLAGS          := -I$(CORE_DIR) -I$(LIBRETRO_COMM_DIR)/include
-COREDEFINES        = -D__LIBRETRO__ -DINLINE=inline -DHAVE_HLE_BIOS
+COREDEFINES        = -D__LIBRETRO__ -DHAVE_HLE_BIOS
 OBJECTS_COND      :=
+
+ifneq (,$(findstring msvc,$(platform)))
+COREDEFINES        += -DINLINE=_inline
+else
+COREDEFINES        += -DINLINE=inline
+endif
 
 ifneq (,$(findstring msvc2003,$(platform)))
 INCFLAGS += -I$(LIBRETRO_COMM_DIR)/include/compat/msvc
@@ -54,6 +60,7 @@ OBJECTS_COND += $(LIBRETRO_COMM_DIR)/memalign.o
 SOURCES_C += 	\
 		$(LIBRETRO_COMM_DIR)/compat/compat_posix_string.c \
 		$(LIBRETRO_COMM_DIR)/compat/compat_strcasestr.c \
+		$(LIBRETRO_COMM_DIR)/compat/compat_snprintf.c \
 		$(LIBRETRO_COMM_DIR)/compat/compat_strl.c \
 		$(LIBRETRO_COMM_DIR)/compat/fopen_utf8.c \
 		$(LIBRETRO_COMM_DIR)/encodings/encoding_utf.c \
@@ -66,6 +73,7 @@ SOURCES_C += 	\
 OBJECTS_COND +=	\
 		$(LIBRETRO_COMM_DIR)/compat/compat_posix_string.o \
 		$(LIBRETRO_COMM_DIR)/compat/compat_strcasestr.o \
+		$(LIBRETRO_COMM_DIR)/compat/compat_snprintf.o \
 		$(LIBRETRO_COMM_DIR)/compat/compat_strl.o \
 		$(LIBRETRO_COMM_DIR)/compat/fopen_utf8.o \
 		$(LIBRETRO_COMM_DIR)/encodings/encoding_utf.o \
