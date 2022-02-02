@@ -11,6 +11,10 @@
 #include "system.h"
 #include "globals.h"
 
+#ifdef __PS3__
+#include <ppu_intrinsics.h>
+#endif
+
 #include "port.h"
 #include "gba.h"
 #include "memory.h"

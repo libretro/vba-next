@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdint.h>
+#ifndef __PS3__
 #include <getopt.h>
+#endif
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
