@@ -1,6 +1,11 @@
 #ifndef PORT_H
 #define PORT_H
 
+#ifdef __PS3__
+/* PlayStation3 */
+#include <ppu_intrinsics.h>
+#endif
+
 #ifdef _XBOX360
 /* XBox 360 */
 #include <ppcintrinsics.h>
