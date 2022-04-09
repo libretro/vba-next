@@ -9234,9 +9234,6 @@ static void mode0RenderLine (void)
 #if !DEBUG_RENDERER_MODE0
 	return;
 #endif
-#ifdef REPORT_VIDEO_MODES
-	fprintf(stderr, "MODE 0: Render Line\n");
-#endif
 	uint16_t* lineMix = GET_LINE_MIX;
 
 	uint32_t backdrop = RENDERER_BACKDROP;
@@ -9346,9 +9343,6 @@ static void mode0RenderLineNoWindow (void)
 
 #if !DEBUG_RENDERER_MODE0
 	return;
-#endif
-#ifdef REPORT_VIDEO_MODES
-	fprintf(stderr, "MODE 0: Render Line No Window\n");
 #endif
 	uint16_t* lineMix = GET_LINE_MIX;
 
@@ -9499,9 +9493,6 @@ static void mode0RenderLineAll (void)
 
 #if !DEBUG_RENDERER_MODE0
 	return;
-#endif
-#ifdef REPORT_VIDEO_MODES
-	fprintf(stderr, "MODE 0: Render Line All\n");
 #endif
 	uint16_t* lineMix = GET_LINE_MIX;
 
@@ -9691,9 +9682,6 @@ static void mode1RenderLine (void)
 #if !DEBUG_RENDERER_MODE1
 	return;
 #endif
-#ifdef REPORT_VIDEO_MODES
-	fprintf(stderr, "MODE 1: Render Line\n");
-#endif
 	uint16_t* lineMix = GET_LINE_MIX;
 
 	uint32_t backdrop = RENDERER_BACKDROP;
@@ -9790,9 +9778,6 @@ static void mode1RenderLineNoWindow (void)
 
 #if !DEBUG_RENDERER_MODE1
 	return;
-#endif
-#ifdef REPORT_VIDEO_MODES
-	fprintf(stderr, "MODE 1: Render Line No Window\n");
 #endif
 	uint16_t* lineMix = GET_LINE_MIX;
 
@@ -9942,9 +9927,6 @@ static void mode1RenderLineAll (void)
 
 #if !DEBUG_RENDERER_MODE1
 	return;
-#endif
-#ifdef REPORT_VIDEO_MODES
-	fprintf(stderr, "MODE 1: Render Line All\n");
 #endif
 	uint16_t* lineMix = GET_LINE_MIX;
 
@@ -10112,9 +10094,6 @@ static void mode2RenderLine (void)
 #if !DEBUG_RENDERER_MODE2
 	return;
 #endif
-#ifdef REPORT_VIDEO_MODES
-	fprintf(stderr, "MODE 2: Render Line\n");
-#endif
 	uint16_t* lineMix = GET_LINE_MIX;
 
 	uint32_t backdrop = RENDERER_BACKDROP;
@@ -10197,9 +10176,6 @@ static void mode2RenderLineNoWindow (void)
 
 #if !DEBUG_RENDERER_MODE2
 	return;
-#endif
-#ifdef REPORT_VIDEO_MODES
-	fprintf(stderr, "MODE 2: Render Line No Window\n");
 #endif
 	uint16_t* lineMix = GET_LINE_MIX;
 
@@ -10323,9 +10299,6 @@ static void mode2RenderLineAll (void)
 
 #if !DEBUG_RENDERER_MODE2
 	return;
-#endif
-#ifdef REPORT_VIDEO_MODES
-	fprintf(stderr, "MODE 2: Render Line All\n");
 #endif
 	uint16_t* lineMix = GET_LINE_MIX;
 
@@ -10475,9 +10448,6 @@ static void mode3RenderLine (void)
 #if !DEBUG_RENDERER_MODE3
 	return;
 #endif
-#ifdef REPORT_VIDEO_MODES
-	fprintf(stderr, "MODE 3: Render Line\n");
-#endif
 	uint16_t* lineMix = GET_LINE_MIX;
 	uint32_t background = RENDERER_BACKDROP;
 
@@ -10528,9 +10498,6 @@ INIT_RENDERER_CONTEXT(renderer_idx);
 
 #if !DEBUG_RENDERER_MODE3
 	return;
-#endif
-#ifdef REPORT_VIDEO_MODES
-	fprintf(stderr, "MODE 3: Render Line No Window\n");
 #endif
 	uint16_t* lineMix = GET_LINE_MIX;
 	uint32_t background = RENDERER_BACKDROP;
@@ -10618,9 +10585,6 @@ static void mode3RenderLineAll (void)
 
 #if !DEBUG_RENDERER_MODE3
 	return;
-#endif
-#ifdef REPORT_VIDEO_MODES
-	fprintf(stderr, "MODE 3: Render Line All\n");
 #endif
 	uint16_t* lineMix = GET_LINE_MIX;
 	uint32_t background = RENDERER_BACKDROP;
@@ -10745,9 +10709,6 @@ static void mode4RenderLine (void)
 #if !DEBUG_RENDERER_MODE4
 	return;
 #endif
-#ifdef REPORT_VIDEO_MODES
-	fprintf(stderr, "MODE 4: Render Line\n");
-#endif
 	uint16_t* lineMix = GET_LINE_MIX;
 	uint32_t backdrop = RENDERER_BACKDROP;
 
@@ -10798,9 +10759,6 @@ static void mode4RenderLineNoWindow (void)
 
 #if !DEBUG_RENDERER_MODE4
 	return;
-#endif
-#ifdef REPORT_VIDEO_MODES
-	fprintf(stderr, "MODE 4: Render Line No Window\n");
 #endif
 	uint16_t* lineMix = GET_LINE_MIX;
 	uint32_t backdrop = RENDERER_BACKDROP;
@@ -10888,9 +10846,6 @@ static void mode4RenderLineAll (void)
 
 #if !DEBUG_RENDERER_MODE4
 	return;
-#endif
-#ifdef REPORT_VIDEO_MODES
-	fprintf(stderr, "MODE 4: Render Line All\n");
 #endif
 	uint16_t* lineMix = GET_LINE_MIX;
 	uint32_t backdrop = RENDERER_BACKDROP;
@@ -11017,9 +10972,6 @@ static void mode5RenderLine (void)
 #if !DEBUG_RENDERER_MODE5
 	return;
 #endif
-#ifdef REPORT_VIDEO_MODES
-	fprintf(stderr, "MODE 5: Render Line\n");
-#endif
 	uint16_t* lineMix = GET_LINE_MIX;
 	uint32_t background = RENDERER_BACKDROP;
 
@@ -11069,9 +11021,6 @@ static void mode5RenderLineNoWindow (void)
 
 #if !DEBUG_RENDERER_MODE5
 	return;
-#endif
-#ifdef REPORT_VIDEO_MODES
-	fprintf(stderr, "MODE 5: Render Line No Window\n");
 #endif
 	uint16_t* lineMix = GET_LINE_MIX;
 	uint32_t background = RENDERER_BACKDROP;
@@ -11159,9 +11108,6 @@ static void mode5RenderLineAll (void)
 
 #if !DEBUG_RENDERER_MODE5
 	return;
-#endif
-#ifdef REPORT_VIDEO_MODES
-	fprintf(stderr, "MODE 5: Render Line All\n");
 #endif
 	uint16_t* lineMix = GET_LINE_MIX;
 	uint32_t background = RENDERER_BACKDROP;
