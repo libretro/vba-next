@@ -47,7 +47,7 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA */
 #define NR52 0x84
 
 /* 1/100th of a second */
-#define SOUND_CLOCK_TICKS_ 167772 
+#define SOUND_CLOCK_TICKS_ 280896
 #define SOUNDVOLUME 0.5f
 #define SOUNDVOLUME_ -1
 
