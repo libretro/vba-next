@@ -48,8 +48,6 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA */
 
 /* 1/100th of a second */
 #define SOUND_CLOCK_TICKS_ 280896
-#define SOUNDVOLUME 0.5f
-#define SOUNDVOLUME_ -1
 
 /*============================================================
 	CLASS DECLS
@@ -2008,7 +2006,7 @@ static void remake_stereo_buffer (void)
 
 	gb_apu_volume(apu_vols [ioMem [SGCNT0_H] & 3] );
 
-	pcm_synth.volume( 0.66 / 256 * SOUNDVOLUME_ );
+	pcm_synth.volume( 0.66 / 256 * -1);
 }
 
 void soundReset (void)
