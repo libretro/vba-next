@@ -14,6 +14,7 @@ enum save_type
    EEPROM_8K,
    FLASH_64K,
    FLASH_128K,
+   SRAM,
    SAVE_UNKNOWN
 };
 
@@ -29,6 +30,8 @@ static const char *save_type_to_string(enum save_type type)
          return "FLASH 512kbit";
       case FLASH_128K:
          return "FLASH 1MBit";
+      case SRAM:
+         return "SRAM";
 
       default:
          return "Unknown type";
@@ -56,9 +59,13 @@ static enum save_type detect_save_type(const uint8_t *data, unsigned size)
       return FLASH_64K;
    if (size == 0x20000)
       return FLASH_128K;
+   if (size == 0x8000)
+      return SRAM;
 
    if (size == (0x20000 + 0x2000))
    {
+      if (scan_section(data, 0x8000) && !scan_section(data + 0x8000, 0x1A000))
+         return SRAM;
       if (scan_section(data, 0x10000) && !scan_section(data + 0x10000, 0x10000))
          return FLASH_64K;
       if (scan_section(data, 0x20000))
@@ -101,6 +108,11 @@ static void dump_srm(FILE *file, const uint8_t *data, enum save_type type)
          fwrite(buf, 1, 0x2000, file);
          break;
 
+      case SRAM:
+         fwrite(data, 1, 0x8000, file);
+         fwrite(buf, 1, 0x1A000, file);
+         break;
+
       default:
          break;
    }
@@ -126,6 +138,10 @@ static void dump_sav(FILE *file, const uint8_t *data, enum save_type type)
 
       case FLASH_128K:
          fwrite(data, 1, 0x20000, file);
+         break;
+
+      case SRAM:
+         fwrite(data, 1, 0x8000, file);
          break;
 
       default:
