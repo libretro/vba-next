@@ -1,4 +1,4 @@
-/* Copyright  (C) 2010-2016 The RetroArch team
+/* Copyright  (C) 2010-2020 The RetroArch team
  *
  * ---------------------------------------------------------------------------------------
  * The following license statement only applies to this file (gx_pthread.h).
@@ -84,10 +84,13 @@
 
 typedef OSThread pthread_t;
 typedef mutex_t pthread_mutex_t;
+typedef OSCond pthread_cond_t;
+
+#if defined(GX_PTHREAD_LEGACY)
 typedef void* pthread_mutexattr_t;
 typedef int pthread_attr_t;
-typedef OSCond pthread_cond_t;
 typedef OSCond pthread_condattr_t;
+#endif
 
 static INLINE int pthread_create(pthread_t *thread,
       const pthread_attr_t *attr, void *(*start_routine)(void*), void *arg)
@@ -179,7 +182,5 @@ static INLINE int pthread_cond_destroy(pthread_cond_t *cond)
 {
    return LWP_CondDestroy(*cond);
 }
-
-extern int pthread_equal(pthread_t t1, pthread_t t2);
 
 #endif
