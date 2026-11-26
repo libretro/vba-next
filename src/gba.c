@@ -9550,9 +9550,11 @@ int CPULoadRomData(const char *data, int size)
 #else
 int CPULoadRom(const char * file)
 {
-	uint8_t *whereToLoad = rom;
+	uint8_t *whereToLoad;
 	if (!CPUSetupBuffers())
       return 0;
+
+	whereToLoad = rom;
 
 	if (file)
 	{
